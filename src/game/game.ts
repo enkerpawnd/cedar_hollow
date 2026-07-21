@@ -5,7 +5,8 @@ import { Player } from './player';
 import { Phone } from './phone';
 import { Narration } from './narration';
 import { renderLighting } from './lighting';
-import { buildRooms, actOne } from './act1';
+import { buildRooms } from './rooms';
+import { actOne } from './act1';
 import type { Co, Ctx2D, Interactable, Room } from './types';
 
 interface Runner {

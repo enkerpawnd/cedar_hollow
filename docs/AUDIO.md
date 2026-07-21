@@ -19,11 +19,13 @@ immediately.
 | `creak` | The floorboard beat after Sam falls asleep (also Acts 3–4) | Slow wooden floor creak under weight — the most important file here |
 | `pickup` | Taking the flashlight | Small object pickup / cloth-and-metal rustle |
 | `thump` | Bag dropped on the floor; barricading; the power cutting out | Soft heavy fabric thump |
-| `breath` | The Act Three phone call | Slow breathing, close to a mic, ~5 seconds, no voice |
+| `breath` | The Act Three phone call; the closet set-piece | Slow breathing, close to a mic, ~5 seconds, no voice |
 | `drag` | Weight moving across wood in the crawlspace (Acts 3–4) | Slow heavy drag/scrape on boards — second most important file after `creak` |
+| `knock` | The sheriff at the door (Ending B) | Three firm knocks on a wooden door |
+| `engine_fail` | The car stalling on the first turn (Ending A) | Starter motor cranking, engine failing to turn over, ~1.5s |
+| `engine_start` | The second turn, when it catches | Engine turning over and settling into idle |
 
-Planned for later acts (not referenced yet): a distant car engine failing to
-turn over, and a knock. Reserve good candidates now if your pack has them.
+Every sound in the game is listed above — nothing else is planned.
 
 Tips: keep footsteps and clicks dry (no reverb baked in), keep loops at
 consistent volume so the crossfades stay smooth, and prefer `.ogg` for size.

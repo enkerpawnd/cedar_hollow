@@ -1,4 +1,5 @@
 import { waitFlag, delayedSay } from './script';
+import { actFour } from './act4';
 import type { Game } from './game';
 import type { Co } from './types';
 
@@ -43,7 +44,6 @@ export function* barricadeCo(g: Game): Co {
   g.ambienceOff();
   yield 3.0;
   g.setFlag('act3_done');
-  g.state = 'end';
 }
 
 // Choice B: go back for the keys. You find them — and the power dies with
@@ -93,7 +93,6 @@ export function* hatchReveal(g: Game): Co {
   g.ambienceOff();
   yield 2.8;
   g.setFlag('act3_done');
-  g.state = 'end';
 }
 
 // ACT THREE — contact. The house answers back, the call breathes, Ellis
@@ -169,6 +168,8 @@ export function* actThree(g: Game): Co {
   g.hint('barricade the door — or go back for those keys');
   g.setFlag('choice_open');
 
-  // the branch coroutines end the act from here
+  // the branch coroutines fade to black and raise act3_done
   yield waitFlag(g, 'act3_done');
+
+  yield* actFour(g);
 }

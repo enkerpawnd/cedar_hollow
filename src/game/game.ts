@@ -9,6 +9,7 @@ import { buildRooms } from './rooms';
 import { actOne } from './act1';
 import { actTwo } from './act2';
 import { actThree } from './act3';
+import { actFour, tenantTick, tenantDraw, overlaysDraw } from './act4';
 import type { Co, Ctx2D, Interactable, Room } from './types';
 
 interface Runner {
@@ -89,8 +90,27 @@ export class Game {
         { from: 'ellis', text: 'no. just you this weekend' },
         { from: 'ellis', text: 'why, is someone there?' },
       ];
+      const act3Flags = ['act3', 'chair_moved', 'pantry_ajar', 'call_answered', 'power_out', 'hatch_open', 'act3_done'];
+      const act3Msgs: Msg[] = [
+        { from: 'ellis', text: 'i called the sheriff. stay in a locked room. do NOT go in the crawlspace' },
+        { from: 'ellis', text: 'he lives out there. between bookings. we’ve had complaints' },
+        { from: 'ellis', text: 'i’m 40 min out. lock the door' },
+      ];
       const skip = new URLSearchParams(location.search).get('act');
-      if (skip === '3') {
+      if (skip === '4' || skip === '4b') {
+        // dev skip / retry-the-night: both act three branches supported
+        for (const f of [...act1Flags, ...act2Flags, ...act3Flags]) this.flags.add(f);
+        if (skip === '4b') {
+          this.flags.add('chose_barricade');
+          this.flags.add('barricaded');
+        } else {
+          this.flags.add('chose_search');
+          this.flags.add('knows_keys');
+          this.flags.add('hatch_seen');
+        }
+        this.phone.msgs.push(...act1Msgs, ...act2Msgs, ...act3Msgs);
+        this.run(actFour(this));
+      } else if (skip === '3') {
         // dev skip: nightfall of day two, keys already missing
         for (const f of [...act1Flags, ...act2Flags]) this.flags.add(f);
         this.phone.msgs.push(...act1Msgs, ...act2Msgs);
@@ -229,6 +249,7 @@ export class Game {
     this.phone.update(dt, this);
     this.narration.update(dt);
     this.player.update(dt, this);
+    if (this.flag('act4')) tenantTick(this, dt);
 
     if (!this.cutscene) {
       if (pressed('tab', 'p') && !this.phone.call) this.phone.toggle(this);
@@ -284,6 +305,7 @@ export class Game {
     ctx.translate(-cam, 0);
     this.room.draw(ctx, this);
     this.player.draw(ctx, this);
+    if (this.flag('act4')) tenantDraw(ctx, this);
     ctx.restore();
 
     const glows = renderLighting(this, cam);
@@ -303,8 +325,9 @@ export class Game {
     ctx.restore();
 
     ctx.drawImage(this.vignette, 0, 0);
+    overlaysDraw(ctx, this, cam);
 
-    if (!this.cutscene && !this.phone.open) this.drawPrompt(ctx, cam);
+    if (!this.cutscene && !this.phone.open && !this.flag('setpiece_active')) this.drawPrompt(ctx, cam);
 
     if (this.hintText) {
       ctx.font = '600 11px -apple-system, "Segoe UI", sans-serif';

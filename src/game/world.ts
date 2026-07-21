@@ -216,6 +216,35 @@ export function drawExterior(ctx: Ctx2D, g: Game): void {
   ctx.arc(152, 442, 13, 0, Math.PI * 2);
   ctx.arc(240, 442, 13, 0, Math.PI * 2);
   ctx.fill();
+
+  if (g.flag('headlights')) {
+    // the beam sweeps the porch
+    const grad = ctx.createLinearGradient(272, 0, 1300, 0);
+    grad.addColorStop(0, 'rgba(235,235,215,0.2)');
+    grad.addColorStop(1, 'rgba(235,235,215,0.04)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(272, 402);
+    ctx.lineTo(1310, 348);
+    ctx.lineTo(1310, 468);
+    ctx.lineTo(272, 430);
+    ctx.closePath();
+    ctx.fill();
+  }
+  if (g.flag('tenant_doorway')) {
+    // he is standing in the doorway. not chasing. watching.
+    ctx.fillStyle = 'rgba(235,230,210,0.14)';
+    ctx.fillRect(1151, 333, 50, 124);
+    ctx.fillStyle = '#040508';
+    ctx.beginPath();
+    ctx.roundRect(1165, 363, 22, 64, 8);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(1176, 355, 8.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(1168, 425, 7, 31);
+    ctx.fillRect(1177, 425, 7, 31);
+  }
 }
 
 // --- Main room: stove, kitchen, doors to bedroom and the back room ---
@@ -338,20 +367,52 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   ctx.fillStyle = '#05060c';
   ctx.fillRect(993, 322, 54, FLOOR_Y - 322);
 
-  ceilingLamp(ctx, 350, g.flag('lights_main'));
-  ceilingLamp(ctx, 840, g.flag('lights_main'));
+  ceilingLamp(ctx, 350, g.flag('lights_main') && !g.flag('power_out'));
+  ceilingLamp(ctx, 840, g.flag('lights_main') && !g.flag('power_out'));
+
+  if (g.flag('sheriff_lights')) {
+    // red and blue through the window, washing the floor
+    const red = Math.sin(g.time * 9) > 0;
+    const c = red ? '255,70,70' : '90,130,255';
+    ctx.fillStyle = `rgba(${c},0.5)`;
+    ctx.fillRect(194, 179, 72, 84);
+    ctx.fillStyle = `rgba(${c},0.09)`;
+    ctx.fillRect(80, 179, 340, 320);
+  }
 }
 
 // --- Bedroom ---
 
 export function drawBedroom(ctx: Ctx2D, g: Game): void {
-  const w = 780;
+  const w = 900;
   const day = g.isDay();
   interiorShell(ctx, w, '#151a28');
 
   doorFrame(ctx, 80, true);
   windowPane(ctx, 210, 175, 70, 92, day ? '#8b9cb0' : '#0a0f1d');
-  doorFrame(ctx, 720, true);
+  doorFrame(ctx, 850, true);
+
+  // the closet: slatted door, floor to header
+  ctx.fillStyle = '#0b0e17';
+  ctx.fillRect(688, 310, 64, FLOOR_Y - 310);
+  ctx.fillStyle = '#080a11';
+  ctx.fillRect(694, 318, 52, FLOOR_Y - 318);
+  ctx.fillStyle = '#0e1220';
+  for (let sy = 332; sy < 452; sy += 12) ctx.fillRect(696, sy, 48, 4);
+  ctx.fillStyle = '#242b3d';
+  ctx.fillRect(740, 392, 3, 8);
+  if (g.flag('hand_on_door')) {
+    // a hand, flat against the slats
+    ctx.fillStyle = '#8d8577';
+    ctx.beginPath();
+    ctx.roundRect(706, 378, 18, 22, 6);
+    ctx.fill();
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.roundRect(706 + i * 5, 366, 4, 16, 2);
+      ctx.fill();
+    }
+  }
 
   ctx.fillStyle = '#111524';
   ctx.beginPath();

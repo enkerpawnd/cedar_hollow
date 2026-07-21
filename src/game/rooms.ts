@@ -1,6 +1,7 @@
 import { drawExterior, drawMain, drawBedroom, drawBackroom, drawBathroom, drawPantry } from './world';
 import { delayedSay } from './script';
 import { barricadeCo, searchCo } from './act3';
+import { endingA, unbarricadeCo } from './act4';
 import type { Game } from './game';
 import type { Co, Interactable, Room } from './types';
 
@@ -73,7 +74,9 @@ export function buildRooms(): Record<string, Room> {
     ambient: 0.5,
     draw: drawExterior,
     lights: [
-      { x: 1023, y: 370, r: 140, warm: true, on: always },
+      { x: 1023, y: 370, r: 140, warm: true, on: (g) => !g.flag('power_out') },
+      { x: 760, y: 415, r: 430, strength: 0.55, on: (g) => g.flag('headlights') },
+      { x: 1176, y: 400, r: 210, strength: 0.6, on: (g) => g.flag('tenant_doorway') },
     ],
     items: [
       examine('car', 195, 'your car', 'Two hours of dirt road to get here. That was the point.', "It'll be fine in the driveway.", 380, (g) => !g.flag('entered')),
@@ -136,7 +139,11 @@ export function buildRooms(): Record<string, Room> {
         id: 'door_out', x: 70, y: 330, label: 'front door',
         enabled: always,
         use(g) {
-          if (g.flag('barricaded')) g.say('The sofa stays where it is.');
+          if (g.flag('act4')) {
+            if (g.flag('barricaded')) g.run(unbarricadeCo(g));
+            else if (g.flag('has_keys')) g.run(endingA(g));
+            else g.say('Not on foot. Not into those trees. Keys.');
+          } else if (g.flag('barricaded')) g.say('The sofa stays where it is.');
           else if (g.flag('act3')) g.say('Two hours of dark road, on foot, with him out here? No.');
           else if (!g.flag('act2')) g.say('I just got here. The quiet can wait until Monday.');
           else if (g.flag('leave_early')) g.say('Keys first.');
@@ -230,7 +237,7 @@ export function buildRooms(): Record<string, Room> {
 
   const bedroom: Room = {
     id: 'bedroom',
-    w: 780,
+    w: 900,
     ambient: 0.72,
     ambientDay: 0.3,
     draw: drawBedroom,
@@ -255,7 +262,9 @@ export function buildRooms(): Record<string, Room> {
         id: 'bed', x: 470, y: 380, label: 'bed',
         enabled: always,
         use(g) {
-          if (g.flag('act3')) {
+          if (g.flag('act4')) {
+            g.say('No time. No chance.');
+          } else if (g.flag('act3')) {
             g.say('Not even as a joke.');
           } else if (g.flag('act2')) {
             g.say(g.flag('leave_early') ? 'No. I’m done sleeping in this house.' : 'I just got up.');
@@ -270,7 +279,23 @@ export function buildRooms(): Record<string, Room> {
           }
         },
       },
-      door('door_bath', 720, 'bathroom', 'bathroom', 140),
+      {
+        id: 'closet', x: 720, y: 340, label: 'closet',
+        enabled: (g) => g.flag('act4') && !g.flag('setpiece_active') && !g.flag('ending'),
+        use(g) {
+          if (!g.player.hidden) {
+            g.player.hidden = true;
+            g.player.x = 720;
+            g.player.flashOn = false;
+            g.setFlag('player_hidden');
+            g.sound.play('switch', { vol: 0.3 });
+          } else {
+            g.player.hidden = false;
+            g.sound.play('switch', { vol: 0.3 });
+          }
+        },
+      },
+      door('door_bath', 850, 'bathroom', 'bathroom', 140),
     ],
   };
 
@@ -342,7 +367,7 @@ export function buildRooms(): Record<string, Room> {
       { x: 113, y: 170, r: 160, strength: 0.5, on: (g) => g.isDay() },
     ],
     items: [
-      door('bathroom_out', 80, 'bedroom', 'bedroom', 720, -1),
+      door('bathroom_out', 80, 'bedroom', 'bedroom', 850, -1),
       {
         id: 'mirror', x: 302, y: 330, label: 'mirror',
         enabled: always,
@@ -390,7 +415,15 @@ export function buildRooms(): Record<string, Room> {
         id: 'duffel', x: 330, y: 400, label: 'duffel bag',
         enabled: (g) => g.flag('boxes_moved'),
         use(g) {
-          if (g.flag('choice_open') && !g.flag('chose_barricade') && !g.flag('act3_done')) {
+          if (g.flag('act4')) {
+            if (!g.flag('has_keys')) {
+              g.setFlag('has_keys');
+              g.sound.play('pickup', { vol: 0.5 });
+              g.say(g.flag('knows_keys') ? 'Side pocket. Keys. Go.' : 'His bag— keys. My keys. Go.');
+            } else {
+              g.say('Go. Go, go.');
+            }
+          } else if (g.flag('choice_open') && !g.flag('chose_barricade') && !g.flag('act3_done')) {
             if (!g.flag('chose_search')) {
               g.setFlag('chose_search');
               g.run(searchCo(g));

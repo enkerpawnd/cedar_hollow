@@ -18,9 +18,9 @@ npm run build    # typecheck + production build in dist/
 Click the title screen to start (the click also unlocks browser audio).
 
 **Controls:** `A/D` or `←/→` walk · `E` interact · `F` flashlight (once you
-have it) · `TAB` phone.
+have it) · `TAB` phone · `SHIFT` run (final act only).
 
-## Current state: Acts One and Two
+## Current state: the full game, Acts One through Four
 
 **Act One** — the cold-open texts from Ellis, arrival at dusk, the
 already-open lockbox, the warm coffee mug, chimney smoke that shouldn't be
@@ -46,8 +46,25 @@ keys. Either way the power dies, the crawlspace hatch is open, and something
 drags itself across the wood below. The choice (and whether you know where
 the keys are) carries into Act Four.
 
-Dev shortcuts: open the game with `?act=2` (second morning) or `?act=3`
-(nightfall, keys missing) to skip ahead with earlier acts resolved.
+**Act Four** — the night. The Tenant moves through the cabin; his footsteps
+are the warning system. Kill the flashlight when he's near (light on him for
+more than a beat = caught), don't run close to him, don't touch him. The
+closet set-piece: his hand rests flat on the slats and you hold still — any
+input at all, for eight real seconds, is a hard end. Then the keys from his
+duffel, the front door (shove the sofa back first if you barricaded — it's
+loud, and he hears it), and the car.
+
+**Endings.** *Drive:* the engine stalls once, catches twice; the headlights
+find him standing in the doorway, watching; two miles later the last two
+texts load. *Wait* (barricade branch only): hold out until the red-and-blue
+lights and the knock — the duffel is gone and the crawlspace is empty.
+*Caught:* the flashlight drops and rolls, the beam settles on the far wall,
+a shadow grows across it, and the title card comes back with the lit window
+dark. Being caught restarts the night, not the weekend.
+
+Dev shortcuts: open the game with `?act=2` (second morning), `?act=3`
+(nightfall, keys missing), `?act=4` (the night, search branch), or `?act=4b`
+(the night, barricaded) to skip ahead with earlier acts resolved.
 
 ## Sound
 
@@ -66,9 +83,14 @@ pack to replace the placeholders one by one — no code changes needed.
 - `src/game/game.ts` — orchestration, coroutine runner, UI drawing
 - `src/game/phone.ts`, `narration.ts`, `player.ts`
 
-## Roadmap (from the script)
+## Roadmap
 
-- **Act Four** — the Tenant AI (footstep-driven stealth, flashlight
-  discipline), the closet set-piece, run button.
-- **Endings** — Drive (with the "you were texting him the whole time" text),
-  Wait (empty crawlspace), Caught (dropped flashlight, dark title card).
+The script is fully playable. What's left is polish:
+
+- Replace the synth placeholder audio with the real sound pack (see
+  `docs/AUDIO.md` — `creak` and `drag` matter most).
+- Playtesting passes on walk speed, darkness levels, Tenant timings, and the
+  interception difficulty.
+- Save points / act select on the title screen (the `?act=` URLs already
+  exist as the mechanism).
+- Optional: film grain, a pause menu, gamepad support, itch.io publishing.

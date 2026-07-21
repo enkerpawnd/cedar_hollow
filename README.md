@@ -37,8 +37,17 @@ car keys are gone from the hook. Small continuity details reward a second
 look: the rinsed mug, the dead stove, the hook that had keys on it the
 night before.
 
-Dev shortcut: open the game with `?act=2` in the URL to start on the second
-morning with Act One resolved.
+**Act Three** — nightfall, and the house answers back. The chair is pulled
+out, the pantry door stands open — always while you were in another room.
+Then the call: unknown number, breathing, cut. Ellis finally tells the truth
+by text ("he lives out there. between bookings.") and the player chooses:
+barricade the front door with the sofa, or go back into the pantry for the
+keys. Either way the power dies, the crawlspace hatch is open, and something
+drags itself across the wood below. The choice (and whether you know where
+the keys are) carries into Act Four.
+
+Dev shortcuts: open the game with `?act=2` (second morning) or `?act=3`
+(nightfall, keys missing) to skip ahead with earlier acts resolved.
 
 ## Sound
 
@@ -59,8 +68,6 @@ pack to replace the placeholders one by one — no code changes needed.
 
 ## Roadmap (from the script)
 
-- **Act Three** — moved objects, the phone call, Ellis's warning texts,
-  barricade/search choice, power dies, open hatch.
 - **Act Four** — the Tenant AI (footstep-driven stealth, flashlight
   discipline), the closet set-piece, run button.
 - **Endings** — Drive (with the "you were texting him the whole time" text),

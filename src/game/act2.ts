@@ -1,4 +1,5 @@
 import { waitFlag, delayedSay } from './script';
+import { actThree } from './act3';
 import type { Game } from './game';
 import type { Co } from './types';
 
@@ -69,6 +70,8 @@ export function* actTwo(g: Game): Co {
   yield 2.0;
   g.hint('grab the car keys from the hook by the door');
 
-  // the ending lives in the key hook interactable; it cuts to black there
+  // the key hook interactable cuts to black and raises act2_done
   yield waitFlag(g, 'act2_done');
+
+  yield* actThree(g);
 }

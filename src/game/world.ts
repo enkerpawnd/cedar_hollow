@@ -223,7 +223,7 @@ export function drawExterior(ctx: Ctx2D, g: Game): void {
 export function drawMain(ctx: Ctx2D, g: Game): void {
   const w = 1100;
   const t = g.time;
-  const day = g.flag('act2');
+  const day = g.isDay();
   interiorShell(ctx, w, '#161b29');
 
   windowPane(ctx, 190, 175, 80, 92, day ? '#8b9cb0' : '#0a0f1d');
@@ -236,24 +236,26 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   // key hook: Sam's keys hang here from arrival — until they don't
   ctx.fillStyle = '#1d2434';
   ctx.fillRect(28, 350, 7, 7);
-  if (g.flag('entered') && !day) {
+  if (g.flag('entered') && !g.flag('act2')) {
     ctx.fillStyle = '#8f9573';
     ctx.fillRect(29, 357, 3, 9);
     ctx.fillRect(33, 357, 3, 7);
   }
 
-  // sofa
-  rr(ctx, 280, 368, 130, 28, 8, '#0b0e17');
-  rr(ctx, 280, 392, 130, 50, 10, '#0a0d15');
+  // sofa — shoved against the front door if Sam barricaded
+  const sofaX = g.flag('barricaded') ? 48 : 280;
+  rr(ctx, sofaX, 368, 130, 28, 8, '#0b0e17');
+  rr(ctx, sofaX, 392, 130, 50, 10, '#0a0d15');
   ctx.fillStyle = '#07090f';
-  ctx.fillRect(288, 440, 8, 30);
-  ctx.fillRect(394, 440, 8, 30);
+  ctx.fillRect(sofaX + 8, 440, 8, 30);
+  ctx.fillRect(sofaX + 114, 440, 8, 30);
 
   // wood stove
   ctx.fillStyle = '#05060c';
   ctx.fillRect(468, 120, 14, 264);
   rr(ctx, 440, 382, 72, 88, 6, '#07080f');
-  if (day) {
+  if (g.flag('act2')) {
+    // dead from the second morning on; nobody relit it
     ctx.fillStyle = '#0d1019';
     ctx.beginPath();
     ctx.arc(476, 428, 9, 0, Math.PI * 2);
@@ -289,8 +291,18 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   ctx.fillStyle = '#090c13';
   ctx.fillRect(585, 418, 8, 52);
   ctx.fillRect(585, 396, 8, 24);
-  ctx.fillRect(699, 418, 8, 52);
-  ctx.fillRect(699, 396, 8, 24);
+  if (!g.flag('chair_moved')) {
+    ctx.fillRect(699, 418, 8, 52);
+    ctx.fillRect(699, 396, 8, 24);
+  } else {
+    // pulled out from the table, angled, like someone sat down
+    ctx.save();
+    ctx.translate(718, 430);
+    ctx.rotate(0.14);
+    ctx.fillRect(-4, -12, 8, 52);
+    ctx.fillRect(-4, -34, 8, 24);
+    ctx.restore();
+  }
 
   // kitchen counter, drawer, the mug
   rr(ctx, 730, 398, 180, 72, 4, '#0b0e17');
@@ -308,7 +320,7 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   ctx.arc(860, 389, 4, -Math.PI / 2, Math.PI / 2);
   ctx.stroke();
   // steam: it is still warm, and it should not be
-  if (!day) {
+  if (!g.flag('act2')) {
     ctx.strokeStyle = 'rgba(220,228,245,0.07)';
     ctx.lineWidth = 1.5;
     for (let i = 0; i < 2; i++) {
@@ -320,7 +332,7 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   }
 
   // pantry door, then the open hallway to the back room
-  doorFrame(ctx, 950, false, 56);
+  doorFrame(ctx, 950, g.flag('pantry_ajar'), 56);
   ctx.fillStyle = '#0b0e17';
   ctx.fillRect(986, 316, 68, FLOOR_Y - 316);
   ctx.fillStyle = '#05060c';
@@ -334,7 +346,7 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
 
 export function drawBedroom(ctx: Ctx2D, g: Game): void {
   const w = 780;
-  const day = g.flag('act2');
+  const day = g.isDay();
   interiorShell(ctx, w, '#151a28');
 
   doorFrame(ctx, 80, true);
@@ -415,20 +427,35 @@ export function drawBackroom(ctx: Ctx2D, g: Game): void {
   ctx.fillStyle = '#1a2130';
   ctx.fillRect(578, 448, 7, 12);
 
-  // floor hatch, barely there
-  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(292, 494, 64, 32);
-  ctx.beginPath();
-  ctx.arc(324, 510, 4, 0, Math.PI);
-  ctx.stroke();
+  // floor hatch: barely there, until it's open
+  if (g.flag('hatch_open')) {
+    ctx.fillStyle = '#020308';
+    ctx.fillRect(292, 494, 64, 32);
+    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(292, 494, 64, 32);
+    // the lid, thrown back against the floor
+    ctx.fillStyle = '#0b0e16';
+    ctx.save();
+    ctx.translate(278, 496);
+    ctx.rotate(-0.5);
+    ctx.fillRect(-58, 0, 62, 7);
+    ctx.restore();
+  } else {
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(292, 494, 64, 32);
+    ctx.beginPath();
+    ctx.arc(324, 510, 4, 0, Math.PI);
+    ctx.stroke();
+  }
 }
 
 // --- Bathroom: off the bedroom ---
 
 export function drawBathroom(ctx: Ctx2D, g: Game): void {
   const w = 480;
-  const day = g.flag('act2');
+  const day = g.isDay();
   interiorShell(ctx, w, '#141a27');
 
   doorFrame(ctx, 80, true);

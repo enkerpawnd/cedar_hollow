@@ -18,12 +18,12 @@ immediately.
 | `text` | Sent-message tone and the cold-open notifications | Soft two-note notification blip |
 | `creak` | The floorboard beat after Sam falls asleep (also Acts 3–4) | Slow wooden floor creak under weight — the most important file here |
 | `pickup` | Taking the flashlight | Small object pickup / cloth-and-metal rustle |
-| `thump` | Bag dropped on the floor | Soft heavy fabric thump |
+| `thump` | Bag dropped on the floor; barricading; the power cutting out | Soft heavy fabric thump |
+| `breath` | The Act Three phone call | Slow breathing, close to a mic, ~5 seconds, no voice |
+| `drag` | Weight moving across wood in the crawlspace (Acts 3–4) | Slow heavy drag/scrape on boards — second most important file after `creak` |
 
-Planned for later acts (not referenced yet): a slow drag of weight on wood
-(the crawlspace), a distant car engine failing to turn over, a knock, and a
-single breath for the phone call. Reserve good candidates now if your pack
-has them.
+Planned for later acts (not referenced yet): a distant car engine failing to
+turn over, and a knock. Reserve good candidates now if your pack has them.
 
 Tips: keep footsteps and clicks dry (no reverb baked in), keep loops at
 consistent volume so the crossfades stay smooth, and prefer `.ogg` for size.

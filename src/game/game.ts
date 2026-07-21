@@ -2,12 +2,13 @@ import { W, H, createScreen, type Screen } from '../engine/screen';
 import { initInput, pressed } from '../engine/input';
 import { Sound, type LoopHandle } from '../engine/audio';
 import { Player } from './player';
-import { Phone } from './phone';
+import { Phone, type Msg } from './phone';
 import { Narration } from './narration';
 import { renderLighting } from './lighting';
 import { buildRooms } from './rooms';
 import { actOne } from './act1';
 import { actTwo } from './act2';
+import { actThree } from './act3';
 import type { Co, Ctx2D, Interactable, Room } from './types';
 
 interface Runner {
@@ -73,16 +74,28 @@ export class Game {
       this.loops.wind = this.sound.loop('wind', 0);
       this.loops.fire = this.sound.loop('fire', 0);
       this.state = 'play';
-      if (new URLSearchParams(location.search).get('act') === '2') {
+      const act1Flags = ['lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight', 'bag_dropped', 'ellis_done'];
+      const act2Flags = ['act2', 'clue_guestbook', 'clue_backroom', 'clue_toothbrush', 'warm_noticed', 'boxes_moved', 'clue_duffel', 'mug_rinsed', 'leave_early', 'keys_gone', 'act2_done'];
+      const act1Msgs: Msg[] = [
+        { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
+        { from: 'ellis', text: 'wasn’t me. haven’t been out there in a week' },
+        { from: 'ellis', text: 'cleaner mustve left it. enjoy your stay' },
+      ];
+      const act2Msgs: Msg[] = [
+        { from: 'sam', text: 'hey weird q, does anyone else stay at cedar hollow between guests? found some clothes and stuff', status: 'delivered' },
+        { from: 'ellis', text: 'no. just you this weekend' },
+        { from: 'ellis', text: 'why, is someone there?' },
+      ];
+      const skip = new URLSearchParams(location.search).get('act');
+      if (skip === '3') {
+        // dev skip: nightfall of day two, keys already missing
+        for (const f of [...act1Flags, ...act2Flags]) this.flags.add(f);
+        this.phone.msgs.push(...act1Msgs, ...act2Msgs);
+        this.run(actThree(this));
+      } else if (skip === '2') {
         // dev skip: start on the morning of day two with act one resolved
-        for (const f of ['lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight', 'bag_dropped', 'ellis_done']) {
-          this.flags.add(f);
-        }
-        this.phone.msgs.push(
-          { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
-          { from: 'ellis', text: 'wasn’t me. haven’t been out there in a week' },
-          { from: 'ellis', text: 'cleaner mustve left it. enjoy your stay' },
-        );
+        for (const f of act1Flags) this.flags.add(f);
+        this.phone.msgs.push(...act1Msgs);
         this.run(actTwo(this));
       } else {
         this.run(actOne(this));

@@ -32,9 +32,11 @@ export class Phone {
   signal = 1;
   unread = 0;
   draft: { text: string; onSent: (m: Msg) => void } | null = null;
+  call: { phase: 'ringing' | 'active'; t: number } | null = null;
   private sigT = 0;
+  private ringT = 0;
 
-  update(dt: number, _g: Game): void {
+  update(dt: number, g: Game): void {
     this.slide += ((this.open ? 1 : 0) - this.slide) * Math.min(1, dt * 10);
     this.sigT -= dt;
     if (this.sigT <= 0) {
@@ -42,6 +44,35 @@ export class Phone {
       const d = Math.random();
       this.signal = Math.max(0, Math.min(3, this.signal + (d < 0.35 ? -1 : d < 0.75 ? 0 : 1)));
     }
+    if (this.call) {
+      this.call.t += dt;
+      if (this.call.phase === 'ringing') {
+        this.ringT -= dt;
+        if (this.ringT <= 0) {
+          this.ringT = 1.5;
+          g.sound.play('buzz', { vol: 0.45 });
+        }
+      }
+    }
+  }
+
+  startCall(_g: Game): void {
+    this.call = { phase: 'ringing', t: 0 };
+    this.ringT = 0;
+    this.open = true;
+  }
+
+  answer(g: Game): void {
+    if (!this.call) return;
+    this.call.phase = 'active';
+    this.call.t = 0;
+    g.setFlag('call_answered');
+    g.sound.play('switch', { vol: 0.3 });
+  }
+
+  endCall(g: Game): void {
+    this.call = null;
+    g.sound.play('switch', { vol: 0.35 });
   }
 
   // Pin the signal bars at a level for a while (scripted dead zones).
@@ -114,11 +145,34 @@ export class Phone {
     ctx.fillStyle = '#d5dce8';
     ctx.font = '600 13px -apple-system, "Segoe UI", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('ELLIS M', px + 14, py + 27);
+    ctx.fillText(this.call ? 'UNKNOWN NUMBER' : 'ELLIS M', px + 14, py + 27);
     for (let i = 0; i < 4; i++) {
       const bh = 3 + i * 3;
       ctx.fillStyle = i < this.signal ? '#cfd8e8' : 'rgba(207,216,232,0.22)';
       ctx.fillRect(px + pw - 38 + i * 7, py + 30 - bh, 4, bh);
+    }
+
+    if (this.call) {
+      ctx.textAlign = 'center';
+      if (this.call.phase === 'ringing') {
+        const pulse = 0.5 + 0.5 * Math.sin(g.time * 6);
+        ctx.font = '14px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = `rgba(213,220,232,${0.5 + 0.4 * pulse})`;
+        ctx.fillText('incoming call', px + pw / 2, py + 190);
+        ctx.font = '600 11px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = `rgba(143,208,160,${0.5 + 0.5 * pulse})`;
+        ctx.fillText('E — ANSWER', px + pw / 2, py + 250);
+      } else {
+        const s = Math.floor(this.call.t);
+        ctx.font = '15px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = 'rgba(213,220,232,0.85)';
+        ctx.fillText(`00:${String(s).padStart(2, '0')}`, px + pw / 2, py + 190);
+        const dots = 1 + (Math.floor(g.time * 0.8) % 3);
+        ctx.fillStyle = 'rgba(139,147,165,0.5)';
+        ctx.fillText('· '.repeat(dots).trim(), px + pw / 2, py + 230);
+      }
+      ctx.restore();
+      return;
     }
 
     // thread, newest at the bottom

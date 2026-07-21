@@ -1,6 +1,6 @@
 const NAMES = [
   'wind', 'fire', 'step_wood', 'step_gravel', 'door', 'switch',
-  'pop', 'buzz', 'text', 'creak', 'pickup', 'thump',
+  'pop', 'buzz', 'text', 'creak', 'pickup', 'thump', 'breath', 'drag',
 ] as const;
 
 export type SoundName = (typeof NAMES)[number];
@@ -170,6 +170,28 @@ export class Sound {
     o.stop(t0 + dur + 0.05);
   }
 
+  // Noise through a filter with a slow rise-and-fall envelope; the filter
+  // frequency can sweep from f0 to f1 across the swell.
+  private swell(dur: number, vol: number, type: BiquadFilterType, f0: number, f1: number, pan = 0, delay = 0): void {
+    const ctx = this.ctx!;
+    const t0 = ctx.currentTime + delay;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noise!;
+    src.loop = true;
+    const f = ctx.createBiquadFilter();
+    f.type = type;
+    f.frequency.setValueAtTime(f0, t0);
+    f.frequency.linearRampToValueAtTime(f1, t0 + dur);
+    const g = this.out(0.0001, pan);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.linearRampToValueAtTime(vol, t0 + dur * 0.45);
+    g.gain.linearRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(f);
+    f.connect(g);
+    src.start(t0);
+    src.stop(t0 + dur + 0.05);
+  }
+
   private synth(name: SoundName, vol: number, pan: number): void {
     switch (name) {
       case 'step_wood':
@@ -206,6 +228,13 @@ export class Sound {
       case 'thump':
         this.tone('sine', 64, 36, 0.24, vol * 0.7, pan);
         this.burst(0.07, vol * 0.25, 'lowpass', 220, pan);
+        break;
+      case 'breath':
+        for (let i = 0; i < 3; i++) this.swell(1.5, vol * 0.35, 'lowpass', 340, 340, pan, i * 1.9);
+        break;
+      case 'drag':
+        this.swell(2.3, vol * 0.5, 'bandpass', 210, 110, pan);
+        this.tone('sine', 55, 40, 2.0, vol * 0.3, pan);
         break;
       case 'wind':
       case 'fire':

@@ -30,7 +30,8 @@ export function renderLighting(g: Game, cam: number): Glow[] {
   const t = g.time;
   const glows: Glow[] = [];
 
-  const ambient = g.flag('act2') && room.ambientDay !== undefined ? room.ambientDay : room.ambient;
+  let ambient = g.isDay() && room.ambientDay !== undefined ? room.ambientDay : room.ambient;
+  if (g.flag('power_out')) ambient = Math.min(0.97, ambient + 0.15);
 
   lctx.save();
   lctx.globalCompositeOperation = 'source-over';

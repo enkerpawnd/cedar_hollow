@@ -94,6 +94,11 @@ export class Game {
     return this.flags.has(n);
   }
 
+  // Daylight lasts exactly one act: the grey morning of Act Two.
+  isDay(): boolean {
+    return this.flags.has('act2') && !this.flags.has('act3');
+  }
+
   setFlag(n: string): void {
     this.flags.add(n);
   }
@@ -141,7 +146,11 @@ export class Game {
 
   setAmbience(): void {
     const ext = this.room.id === 'exterior';
-    if (this.flag('act2')) {
+    if (this.flag('act3')) {
+      // night again, and the stove stayed dead
+      this.loopTargets.wind = ext ? 0.38 : 0.12;
+      this.loopTargets.fire = 0;
+    } else if (this.flag('act2')) {
       // morning: thinner wind, and the stove burned out overnight
       this.loopTargets.wind = ext ? 0.3 : 0.07;
       this.loopTargets.fire = 0;
@@ -202,10 +211,11 @@ export class Game {
     this.player.update(dt, this);
 
     if (!this.cutscene) {
-      if (pressed('tab', 'p')) this.phone.toggle(this);
+      if (pressed('tab', 'p') && !this.phone.call) this.phone.toggle(this);
       if (this.phone.open) {
-        if (pressed('e', 'enter') && this.phone.draft) this.phone.send(this);
-        if (pressed('escape')) this.phone.open = false;
+        if (this.phone.call?.phase === 'ringing' && pressed('e', 'enter')) this.phone.answer(this);
+        else if (pressed('e', 'enter') && this.phone.draft && !this.phone.call) this.phone.send(this);
+        if (pressed('escape') && !this.phone.call) this.phone.open = false;
       } else {
         if (pressed('f') && this.flag('has_flashlight')) {
           this.player.flashOn = !this.player.flashOn;

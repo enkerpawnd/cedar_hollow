@@ -7,6 +7,7 @@ import { Narration } from './narration';
 import { renderLighting } from './lighting';
 import { buildRooms } from './rooms';
 import { actOne } from './act1';
+import { actTwo } from './act2';
 import type { Co, Ctx2D, Interactable, Room } from './types';
 
 interface Runner {
@@ -72,7 +73,20 @@ export class Game {
       this.loops.wind = this.sound.loop('wind', 0);
       this.loops.fire = this.sound.loop('fire', 0);
       this.state = 'play';
-      this.run(actOne(this));
+      if (new URLSearchParams(location.search).get('act') === '2') {
+        // dev skip: start on the morning of day two with act one resolved
+        for (const f of ['lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight', 'bag_dropped', 'ellis_done']) {
+          this.flags.add(f);
+        }
+        this.phone.msgs.push(
+          { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
+          { from: 'ellis', text: 'wasn’t me. haven’t been out there in a week' },
+          { from: 'ellis', text: 'cleaner mustve left it. enjoy your stay' },
+        );
+        this.run(actTwo(this));
+      } else {
+        this.run(actOne(this));
+      }
     });
   }
 

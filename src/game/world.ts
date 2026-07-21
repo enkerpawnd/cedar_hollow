@@ -43,18 +43,18 @@ function windowPane(ctx: Ctx2D, x: number, y: number, w: number, h: number, glas
   ctx.fillRect(x, y + h / 2 - 2, w, 4);
 }
 
-function doorFrame(ctx: Ctx2D, x: number, open = false): void {
+function doorFrame(ctx: Ctx2D, x: number, open = false, w = 68): void {
   ctx.fillStyle = '#0b0e17';
-  ctx.fillRect(x - 34, 316, 68, FLOOR_Y - 316);
+  ctx.fillRect(x - w / 2, 316, w, FLOOR_Y - 316);
   if (open) {
     ctx.fillStyle = '#05060c';
-    ctx.fillRect(x - 27, 322, 54, FLOOR_Y - 322);
+    ctx.fillRect(x - w / 2 + 7, 322, w - 14, FLOOR_Y - 322);
   } else {
     ctx.fillStyle = '#080a11';
-    ctx.fillRect(x - 27, 322, 54, FLOOR_Y - 322);
+    ctx.fillRect(x - w / 2 + 7, 322, w - 14, FLOOR_Y - 322);
     ctx.fillStyle = '#242b3d';
     ctx.beginPath();
-    ctx.arc(x + 18, 396, 2.5, 0, Math.PI * 2);
+    ctx.arc(x + w / 2 - 16, 396, 2.5, 0, Math.PI * 2);
     ctx.fill();
   }
 }
@@ -223,14 +223,24 @@ export function drawExterior(ctx: Ctx2D, g: Game): void {
 export function drawMain(ctx: Ctx2D, g: Game): void {
   const w = 1100;
   const t = g.time;
+  const day = g.flag('act2');
   interiorShell(ctx, w, '#161b29');
 
-  windowPane(ctx, 190, 175, 80, 92, '#0a0f1d');
+  windowPane(ctx, 190, 175, 80, 92, day ? '#8b9cb0' : '#0a0f1d');
   pine(ctx, 214, 262, 40, '#070a12');
   pine(ctx, 244, 262, 30, '#070a12');
 
   doorFrame(ctx, 70);
   lightSwitch(ctx, 140);
+
+  // key hook: Sam's keys hang here from arrival — until they don't
+  ctx.fillStyle = '#1d2434';
+  ctx.fillRect(28, 350, 7, 7);
+  if (g.flag('entered') && !day) {
+    ctx.fillStyle = '#8f9573';
+    ctx.fillRect(29, 357, 3, 9);
+    ctx.fillRect(33, 357, 3, 7);
+  }
 
   // sofa
   rr(ctx, 280, 368, 130, 28, 8, '#0b0e17');
@@ -243,11 +253,18 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   ctx.fillStyle = '#05060c';
   ctx.fillRect(468, 120, 14, 264);
   rr(ctx, 440, 382, 72, 88, 6, '#07080f');
-  const flick = 0.5 + 0.28 * (Math.sin(t * 11.3) * 0.6 + Math.sin(t * 27.1) * 0.4);
-  ctx.fillStyle = `rgba(255,140,60,${Math.max(0.2, flick)})`;
-  ctx.beginPath();
-  ctx.arc(476, 428, 9, 0, Math.PI * 2);
-  ctx.fill();
+  if (day) {
+    ctx.fillStyle = '#0d1019';
+    ctx.beginPath();
+    ctx.arc(476, 428, 9, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    const flick = 0.5 + 0.28 * (Math.sin(t * 11.3) * 0.6 + Math.sin(t * 27.1) * 0.4);
+    ctx.fillStyle = `rgba(255,140,60,${Math.max(0.2, flick)})`;
+    ctx.beginPath();
+    ctx.arc(476, 428, 9, 0, Math.PI * 2);
+    ctx.fill();
+  }
   // log pile
   ctx.fillStyle = '#0b0e16';
   for (const [lx, ly] of [[532, 458], [548, 458], [540, 446]] as const) {
@@ -261,6 +278,12 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   // table and chairs, everything tucked in where it should be
   ctx.fillStyle = '#0a0d15';
   ctx.fillRect(600, 410, 92, 8);
+  // guestbook on the table
+  ctx.fillStyle = '#1b2233';
+  ctx.fillRect(634, 403, 27, 7);
+  ctx.fillStyle = 'rgba(255,255,255,0.08)';
+  ctx.fillRect(634, 403, 27, 2);
+  ctx.fillStyle = '#0a0d15';
   ctx.fillRect(606, 418, 6, 52);
   ctx.fillRect(680, 418, 6, 52);
   ctx.fillStyle = '#090c13';
@@ -285,16 +308,19 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   ctx.arc(860, 389, 4, -Math.PI / 2, Math.PI / 2);
   ctx.stroke();
   // steam: it is still warm, and it should not be
-  ctx.strokeStyle = 'rgba(220,228,245,0.07)';
-  ctx.lineWidth = 1.5;
-  for (let i = 0; i < 2; i++) {
-    ctx.beginPath();
-    ctx.moveTo(850 + i * 5, 378);
-    ctx.quadraticCurveTo(846 + i * 5 + Math.sin(t * 2 + i) * 4, 366, 851 + i * 5, 354);
-    ctx.stroke();
+  if (!day) {
+    ctx.strokeStyle = 'rgba(220,228,245,0.07)';
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < 2; i++) {
+      ctx.beginPath();
+      ctx.moveTo(850 + i * 5, 378);
+      ctx.quadraticCurveTo(846 + i * 5 + Math.sin(t * 2 + i) * 4, 366, 851 + i * 5, 354);
+      ctx.stroke();
+    }
   }
 
-  // open hallway to the back room
+  // pantry door, then the open hallway to the back room
+  doorFrame(ctx, 950, false, 56);
   ctx.fillStyle = '#0b0e17';
   ctx.fillRect(986, 316, 68, FLOOR_Y - 316);
   ctx.fillStyle = '#05060c';
@@ -307,11 +333,13 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
 // --- Bedroom ---
 
 export function drawBedroom(ctx: Ctx2D, g: Game): void {
-  const w = 700;
+  const w = 780;
+  const day = g.flag('act2');
   interiorShell(ctx, w, '#151a28');
 
   doorFrame(ctx, 80, true);
-  windowPane(ctx, 210, 175, 70, 92, '#0a0f1d');
+  windowPane(ctx, 210, 175, 70, 92, day ? '#8b9cb0' : '#0a0f1d');
+  doorFrame(ctx, 720, true);
 
   ctx.fillStyle = '#111524';
   ctx.beginPath();
@@ -394,4 +422,147 @@ export function drawBackroom(ctx: Ctx2D, g: Game): void {
   ctx.beginPath();
   ctx.arc(324, 510, 4, 0, Math.PI);
   ctx.stroke();
+}
+
+// --- Bathroom: off the bedroom ---
+
+export function drawBathroom(ctx: Ctx2D, g: Game): void {
+  const w = 480;
+  const day = g.flag('act2');
+  interiorShell(ctx, w, '#141a27');
+
+  doorFrame(ctx, 80, true);
+  windowPane(ctx, 96, 140, 34, 46, day ? '#8b9cb0' : '#0a0f1d');
+
+  // towel
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(150, 318, 54, 4);
+  ctx.fillStyle = '#182032';
+  ctx.beginPath();
+  ctx.roundRect(158, 322, 30, 42, 3);
+  ctx.fill();
+
+  // vanity light + mirror
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(260, 196, 84, 7);
+  ctx.fillStyle = 'rgba(255,217,160,0.55)';
+  ctx.fillRect(264, 199, 76, 3);
+  ctx.fillStyle = '#1c2434';
+  ctx.beginPath();
+  ctx.roundRect(266, 210, 72, 92, 4);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(280, 292);
+  ctx.lineTo(322, 222);
+  ctx.stroke();
+
+  // sink
+  ctx.fillStyle = '#141a28';
+  ctx.fillRect(248, 396, 108, 12);
+  ctx.fillStyle = '#0b0e17';
+  ctx.beginPath();
+  ctx.roundRect(252, 408, 100, 62, 4);
+  ctx.fill();
+  ctx.fillStyle = '#2a3245';
+  ctx.fillRect(298, 384, 5, 12);
+  ctx.fillRect(298, 384, 14, 4);
+
+  // the cup: one toothbrush on arrival, two in the morning
+  ctx.fillStyle = '#232b3f';
+  ctx.fillRect(336, 382, 13, 15);
+  if (g.flag('bag_dropped') || day) {
+    ctx.strokeStyle = '#3a6fa8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(340, 384);
+    ctx.lineTo(338, 368);
+    ctx.stroke();
+  }
+  if (day) {
+    ctx.strokeStyle = '#8a8f9c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(345, 384);
+    ctx.lineTo(349, 369);
+    ctx.stroke();
+  }
+
+  // toilet
+  ctx.fillStyle = '#0b0e17';
+  ctx.beginPath();
+  ctx.roundRect(404, 424, 46, 46, 8);
+  ctx.fill();
+  ctx.fillRect(438, 388, 16, 40);
+}
+
+// --- Pantry: boxes in front of something that isn't food ---
+
+export function drawPantry(ctx: Ctx2D, g: Game): void {
+  const w = 460;
+  interiorShell(ctx, w, '#131826');
+
+  doorFrame(ctx, 80, true);
+
+  // bare bulb; this one works
+  ctx.strokeStyle = '#0a0c13';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(230, 84);
+  ctx.lineTo(230, 198);
+  ctx.stroke();
+  ctx.fillStyle = '#ffd9a0';
+  ctx.beginPath();
+  ctx.arc(230, 205, 6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // shelving
+  ctx.fillStyle = '#0b0e16';
+  for (const y of [252, 312, 372]) ctx.fillRect(250, y, 172, 6);
+  ctx.fillRect(252, 252, 5, 218);
+  ctx.fillRect(417, 252, 5, 218);
+  ctx.fillStyle = '#0d1019';
+  const jars = [
+    [262, 228, 30, 24], [300, 232, 24, 20], [340, 224, 34, 28],
+    [266, 288, 26, 24], [306, 292, 40, 20],
+    [270, 348, 36, 24], [318, 352, 22, 20], [352, 344, 30, 28],
+  ] as const;
+  for (const [bx, by, bw, bh] of jars) ctx.fillRect(bx, by, bw, bh);
+
+  // the floor boxes, and what's behind them
+  if (!g.flag('boxes_moved')) {
+    ctx.fillStyle = '#0d1019';
+    ctx.fillRect(288, 414, 54, 56);
+    ctx.fillRect(344, 432, 44, 38);
+    ctx.fillRect(298, 382, 46, 34);
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(315, 382);
+    ctx.lineTo(315, 416);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = '#0d1019';
+    ctx.fillRect(258, 428, 50, 42);
+    ctx.fillRect(388, 440, 40, 30);
+    // the duffel
+    ctx.fillStyle = '#05060a';
+    ctx.beginPath();
+    ctx.roundRect(316, 434, 66, 32, 9);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(322, 442);
+    ctx.lineTo(376, 442);
+    ctx.stroke();
+    if (g.flag('clue_duffel')) {
+      // the booking sheet, out where Sam dropped it
+      ctx.fillStyle = 'rgba(200,205,216,0.85)';
+      ctx.fillRect(394, 456, 15, 11);
+      ctx.fillStyle = 'rgba(214,196,92,0.9)';
+      ctx.fillRect(396, 460, 11, 2);
+    }
+  }
 }

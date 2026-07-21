@@ -20,13 +20,25 @@ Click the title screen to start (the click also unlocks browser audio).
 **Controls:** `A/D` or `←/→` walk · `E` interact · `F` flashlight (once you
 have it) · `TAB` phone.
 
-## Current state: Act One vertical slice
+## Current state: Acts One and Two
 
-Playable beats: the cold-open texts from Ellis, arrival at dusk, the
+**Act One** — the cold-open texts from Ellis, arrival at dusk, the
 already-open lockbox, the warm coffee mug, chimney smoke that shouldn't be
 there, the back-room bulb dying (get the flashlight from the kitchen drawer),
 dropping the bag, the "wasn't me" text exchange, and the sleep cut with a
 floorboard creak from a room Sam isn't in.
+
+**Act Two** — grey morning, and the house is wrong. Four clues to find at
+your own pace: the guestbook ("don't use the back room"), the warm mattress
+in the back room, the duffel behind the pantry boxes with your booking dates
+highlighted, and the second toothbrush. The duffel triggers the midpoint
+text ("why, is someone there?"), Sam decides to leave a day early, and the
+car keys are gone from the hook. Small continuity details reward a second
+look: the rinsed mug, the dead stove, the hook that had keys on it the
+night before.
+
+Dev shortcut: open the game with `?act=2` in the URL to start on the second
+morning with Act One resolved.
 
 ## Sound
 
@@ -47,8 +59,6 @@ pack to replace the placeholders one by one — no code changes needed.
 
 ## Roadmap (from the script)
 
-- **Act Two** — guestbook, duffel in the pantry, wet toothbrush, the
-  "does anyone else stay here" exchange, missing car keys.
 - **Act Three** — moved objects, the phone call, Ellis's warning texts,
   barricade/search choice, power dies, open hatch.
 - **Act Four** — the Tenant AI (footstep-driven stealth, flashlight

@@ -1,4 +1,5 @@
 import { waitFlag } from './script';
+import { actTwo } from './act2';
 import type { Game } from './game';
 import type { Co } from './types';
 
@@ -70,5 +71,6 @@ export function* actOne(g: Game): Co {
   // a floorboard, from a room Sam isn't in
   g.sound.play('creak', { vol: 0.5, pan: -0.5 });
   yield 3.2;
-  g.state = 'end';
+
+  yield* actTwo(g);
 }

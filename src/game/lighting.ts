@@ -30,10 +30,12 @@ export function renderLighting(g: Game, cam: number): Glow[] {
   const t = g.time;
   const glows: Glow[] = [];
 
+  const ambient = g.flag('act2') && room.ambientDay !== undefined ? room.ambientDay : room.ambient;
+
   lctx.save();
   lctx.globalCompositeOperation = 'source-over';
   lctx.clearRect(0, 0, W, H);
-  lctx.fillStyle = `rgba(3,4,10,${room.ambient})`;
+  lctx.fillStyle = `rgba(3,4,10,${ambient})`;
   lctx.fillRect(0, 0, W, H);
   lctx.globalCompositeOperation = 'destination-out';
 

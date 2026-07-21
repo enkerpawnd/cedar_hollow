@@ -27,6 +27,8 @@ export interface Room {
   w: number;
   // Base darkness of the room, 0 (fully lit) to 1 (black). Lights cut through it.
   ambient: number;
+  // Darkness once morning comes (the act2 flag). Falls back to ambient.
+  ambientDay?: number;
   lights: Light[];
   items: Interactable[];
   draw(ctx: Ctx2D, g: Game): void;

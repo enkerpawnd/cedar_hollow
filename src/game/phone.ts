@@ -44,6 +44,12 @@ export class Phone {
     }
   }
 
+  // Pin the signal bars at a level for a while (scripted dead zones).
+  forceSignal(level: number, dur: number): void {
+    this.signal = level;
+    this.sigT = dur;
+  }
+
   toggle(g: Game): void {
     this.open = !this.open;
     if (this.open) this.unread = 0;

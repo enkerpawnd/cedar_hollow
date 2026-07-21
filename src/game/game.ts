@@ -44,6 +44,8 @@ export class Game {
   fade = 1;
   hintText = '';
   introLines: string[] = [];
+  endText = 'end of act one — vertical slice';
+  onRoomEnter: ((id: string) => void) | null = null;
 
   private runners: Runner[] = [];
   private fadeFrom = 1;
@@ -116,6 +118,7 @@ export class Game {
       g.player.x = spawnX;
       g.player.facing = spawnFacing;
       g.setAmbience();
+      g.onRoomEnter?.(id);
       g.fadeToBlack(0, 0.35);
       yield 0.4;
       g.cutscene = false;
@@ -124,8 +127,14 @@ export class Game {
 
   setAmbience(): void {
     const ext = this.room.id === 'exterior';
-    this.loopTargets.wind = ext ? 0.38 : 0.1;
-    this.loopTargets.fire = ext ? 0 : 0.16;
+    if (this.flag('act2')) {
+      // morning: thinner wind, and the stove burned out overnight
+      this.loopTargets.wind = ext ? 0.3 : 0.07;
+      this.loopTargets.fire = 0;
+    } else {
+      this.loopTargets.wind = ext ? 0.38 : 0.1;
+      this.loopTargets.fire = ext ? 0 : 0.16;
+    }
   }
 
   ambienceOff(): void {
@@ -222,7 +231,10 @@ export class Game {
       return;
     }
 
-    const cam = Math.max(0, Math.min(this.room.w - W, this.player.x - W / 2));
+    // rooms narrower than the screen sit centered; wider ones scroll
+    const cam = this.room.w <= W
+      ? (this.room.w - W) / 2
+      : Math.max(0, Math.min(this.room.w - W, this.player.x - W / 2));
 
     ctx.save();
     ctx.translate(-cam, 0);
@@ -335,7 +347,7 @@ export class Game {
     ctx.fillText('CEDAR HOLLOW', W / 2, 288);
     ctx.font = '13px Georgia, serif';
     ctx.fillStyle = '#6b7386';
-    ctx.fillText('end of act one — vertical slice', W / 2, 318);
+    ctx.fillText(this.endText, W / 2, 318);
     const pulse = 0.45 + 0.35 * Math.sin(this.time * 2.5);
     ctx.font = '13px -apple-system, "Segoe UI", sans-serif';
     ctx.fillStyle = `rgba(200,208,225,${pulse})`;

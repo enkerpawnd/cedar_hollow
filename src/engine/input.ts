@@ -26,3 +26,8 @@ export function pressed(...keys: string[]): boolean {
 export function clearPressed(): void {
   pressedSet.clear();
 }
+
+// True if any key at all went down this frame (the closet set-piece).
+export function anyPressed(): boolean {
+  return pressedSet.size > 0;
+}

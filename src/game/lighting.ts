@@ -57,7 +57,26 @@ export function renderLighting(g: Game, cam: number): Glow[] {
   const py = FLOOR_Y - 45;
   cutRadial(lctx, px, py, 80, 0.3);
 
-  if (g.player.flashOn && g.flag('has_flashlight')) {
+  if (g.droppedLight) {
+    // the flashlight on the floor, beam settling against the far wall
+    const d = g.droppedLight;
+    const x = d.x - cam;
+    const y = FLOOR_Y - 6;
+    const settle = Math.max(0, 1.4 - (g.time - d.at));
+    const ang = (d.dir === 1 ? 0 : Math.PI) + Math.sin((g.time - d.at) * 11) * 0.14 * settle - 0.02 * d.dir;
+    const R = 320;
+    const grad = lctx.createRadialGradient(x, y, 0, x, y, R);
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(0.75, 'rgba(255,255,255,0.5)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    lctx.fillStyle = grad;
+    lctx.beginPath();
+    lctx.moveTo(x, y);
+    lctx.arc(x, y, R, ang - 0.16, ang + 0.16);
+    lctx.closePath();
+    lctx.fill();
+    cutRadial(lctx, x, y, 34, 0.5);
+  } else if (g.player.flashOn && g.flag('has_flashlight')) {
     const facing = g.player.facing;
     const ox = px + facing * 14;
     const oy = FLOOR_Y - 68;

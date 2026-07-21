@@ -3,40 +3,68 @@ import { FLOOR_Y } from './world';
 import type { Game } from './game';
 import type { Ctx2D } from './types';
 
-const SPEED = 105; // deliberately slow; there is no run in Act One
+const SPEED = 105; // deliberately slow; the run only exists in the final act
+const RUN_SPEED = 185;
 
 export class Player {
   x = 190;
   facing: 1 | -1 = 1;
   walking = false;
+  running = false;
+  hidden = false;
   bob = 0;
   flashOn = false;
   private stepAcc = 0;
 
   update(dt: number, g: Game): void {
+    // scripted movement (the run to the car) overrides everything
+    if (g.autoMove) {
+      const d = g.autoMove.tx - this.x;
+      const step = g.autoMove.speed * dt;
+      if (Math.abs(d) <= step) {
+        this.x = g.autoMove.tx;
+        g.autoMove = null;
+        this.walking = false;
+      } else {
+        this.x += Math.sign(d) * step;
+        this.facing = d > 0 ? 1 : -1;
+        this.walking = true;
+        this.bob += dt * 11;
+        this.step(g, step, 30, 0.3);
+      }
+      return;
+    }
+
     let vx = 0;
-    if (!g.inputLocked()) {
+    if (!g.inputLocked() && !this.hidden) {
       const l = isDown('a', 'arrowleft');
       const r = isDown('d', 'arrowright');
       vx = (r ? 1 : 0) - (l ? 1 : 0);
     }
+    this.running = vx !== 0 && g.flag('act4') && isDown('shift');
+    const speed = this.running ? RUN_SPEED : SPEED;
     if (vx !== 0) this.facing = vx > 0 ? 1 : -1;
-    this.x = Math.max(36, Math.min(g.room.w - 36, this.x + vx * SPEED * dt));
+    this.x = Math.max(36, Math.min(g.room.w - 36, this.x + vx * speed * dt));
     this.walking = vx !== 0;
-    this.bob += dt * (this.walking ? 8 : 2.4);
+    this.bob += dt * (this.walking ? (this.running ? 12 : 8) : 2.4);
     if (this.walking) {
-      this.stepAcc += Math.abs(vx) * SPEED * dt;
-      if (this.stepAcc >= 36) {
-        this.stepAcc = 0;
-        g.sound.play(g.room.id === 'exterior' ? 'step_gravel' : 'step_wood', {
-          vol: 0.2,
-          rate: 0.9 + Math.random() * 0.2,
-        });
-      }
+      this.step(g, Math.abs(vx) * speed * dt, this.running ? 30 : 36, this.running ? 0.36 : 0.2);
+    }
+  }
+
+  private step(g: Game, dist: number, span: number, vol: number): void {
+    this.stepAcc += dist;
+    if (this.stepAcc >= span) {
+      this.stepAcc = 0;
+      g.sound.play(g.room.id === 'exterior' ? 'step_gravel' : 'step_wood', {
+        vol,
+        rate: 0.9 + Math.random() * 0.2,
+      });
     }
   }
 
   draw(ctx: Ctx2D, g: Game): void {
+    if (this.hidden) return;
     const x = this.x;
     const fy = FLOOR_Y;
     const bobY = Math.sin(this.bob) * (this.walking ? 1.6 : 0.8);

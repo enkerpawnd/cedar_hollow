@@ -1,6 +1,7 @@
 const NAMES = [
   'wind', 'fire', 'step_wood', 'step_gravel', 'door', 'switch',
   'pop', 'buzz', 'text', 'creak', 'pickup', 'thump', 'breath', 'drag',
+  'knock', 'engine_fail', 'engine_start',
 ] as const;
 
 export type SoundName = (typeof NAMES)[number];
@@ -231,6 +232,19 @@ export class Sound {
         break;
       case 'breath':
         for (let i = 0; i < 3; i++) this.swell(1.5, vol * 0.35, 'lowpass', 340, 340, pan, i * 1.9);
+        break;
+      case 'knock':
+        for (let i = 0; i < 3; i++) {
+          this.tone('sine', 110, 70, 0.1, vol * 0.7, pan, i * 0.28);
+          this.burst(0.05, vol * 0.4, 'lowpass', 400, pan, i * 0.28);
+        }
+        break;
+      case 'engine_fail':
+        for (let i = 0; i < 6; i++) this.tone('sawtooth', 72 - i * 4, 40, 0.13, vol * 0.4, pan, i * 0.17, 220);
+        break;
+      case 'engine_start':
+        this.tone('sawtooth', 42, 88, 0.9, vol * 0.5, pan, 0, 260);
+        this.swell(2.6, vol * 0.45, 'lowpass', 130, 95, pan, 0.5);
         break;
       case 'drag':
         this.swell(2.3, vol * 0.5, 'bandpass', 210, 110, pan);

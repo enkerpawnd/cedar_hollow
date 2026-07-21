@@ -47,7 +47,10 @@ export class Game {
   hintText = '';
   introLines: string[] = [];
   endText = 'end of act one — vertical slice';
+  endWindowLit = true;
   onRoomEnter: ((id: string) => void) | null = null;
+  autoMove: { tx: number; speed: number } | null = null;
+  droppedLight: { x: number; dir: 1 | -1; at: number } | null = null;
 
   private runners: Runner[] = [];
   private fadeFrom = 1;
@@ -182,7 +185,11 @@ export class Game {
     this.time += dt;
 
     if (this.state === 'end') {
-      if (pressed('r')) location.reload();
+      if (pressed('r')) {
+        // being caught restarts the night, not the whole weekend
+        if (this.flag('caught')) location.search = this.flag('chose_barricade') ? 'act=4b' : 'act=4';
+        else location.reload();
+      }
       return;
     }
     if (this.state !== 'play') return;
@@ -377,14 +384,16 @@ export class Game {
   }
 
   private drawEnd(ctx: Ctx2D): void {
-    this.drawWindowMotif(ctx, true);
+    this.drawWindowMotif(ctx, this.endWindowLit);
     ctx.textAlign = 'center';
     ctx.font = 'italic 36px Georgia, serif';
     ctx.fillStyle = '#ccd2e0';
     ctx.fillText('CEDAR HOLLOW', W / 2, 288);
-    ctx.font = '13px Georgia, serif';
-    ctx.fillStyle = '#6b7386';
-    ctx.fillText(this.endText, W / 2, 318);
+    if (this.endText) {
+      ctx.font = '13px Georgia, serif';
+      ctx.fillStyle = '#6b7386';
+      ctx.fillText(this.endText, W / 2, 318);
+    }
     const pulse = 0.45 + 0.35 * Math.sin(this.time * 2.5);
     ctx.font = '13px -apple-system, "Segoe UI", sans-serif';
     ctx.fillStyle = `rgba(200,208,225,${pulse})`;

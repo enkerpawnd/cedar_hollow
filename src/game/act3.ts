@@ -1,4 +1,5 @@
 import { waitFlag, delayedSay } from './script';
+import { saveCheckpoint } from './save';
 import { actFour } from './act4';
 import type { Game } from './game';
 import type { Co } from './types';
@@ -98,6 +99,7 @@ export function* hatchReveal(g: Game): Co {
 // ACT THREE — contact. The house answers back, the call breathes, Ellis
 // finally tells the truth by text, and the player picks their act four.
 export function* actThree(g: Game): Co {
+  saveCheckpoint('act3');
   g.setFlag('act3');
   g.endText = 'end of act three — vertical slice';
   g.cutscene = true;

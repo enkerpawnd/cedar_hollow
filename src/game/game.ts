@@ -10,6 +10,7 @@ import { actOne } from './act1';
 import { actTwo } from './act2';
 import { actThree } from './act3';
 import { actFour, tenantTick, tenantDraw, overlaysDraw } from './act4';
+import { loadCheckpoint, clearSave, CHECKPOINT_LABELS, type Checkpoint } from './save';
 import type { Co, Ctx2D, Interactable, Room } from './types';
 
 interface Runner {
@@ -61,6 +62,7 @@ export class Game {
   private loops: { wind: LoopHandle | null; fire: LoopHandle | null } = { wind: null, fire: null };
   private loopTargets = { wind: 0, fire: 0 };
   private vignette: HTMLCanvasElement;
+  private savedCp: Checkpoint | null = loadCheckpoint();
 
   constructor() {
     this.screen = createScreen();
@@ -78,52 +80,56 @@ export class Game {
       this.loops.wind = this.sound.loop('wind', 0);
       this.loops.fire = this.sound.loop('fire', 0);
       this.state = 'play';
-      const act1Flags = ['lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight', 'bag_dropped', 'ellis_done'];
-      const act2Flags = ['act2', 'clue_guestbook', 'clue_backroom', 'clue_toothbrush', 'warm_noticed', 'boxes_moved', 'clue_duffel', 'mug_rinsed', 'leave_early', 'keys_gone', 'act2_done'];
-      const act1Msgs: Msg[] = [
-        { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
-        { from: 'ellis', text: 'wasn’t me. haven’t been out there in a week' },
-        { from: 'ellis', text: 'cleaner mustve left it. enjoy your stay' },
-      ];
-      const act2Msgs: Msg[] = [
-        { from: 'sam', text: 'hey weird q, does anyone else stay at cedar hollow between guests? found some clothes and stuff', status: 'delivered' },
-        { from: 'ellis', text: 'no. just you this weekend' },
-        { from: 'ellis', text: 'why, is someone there?' },
-      ];
-      const act3Flags = ['act3', 'chair_moved', 'pantry_ajar', 'call_answered', 'power_out', 'hatch_open', 'act3_done'];
-      const act3Msgs: Msg[] = [
-        { from: 'ellis', text: 'i called the sheriff. stay in a locked room. do NOT go in the crawlspace' },
-        { from: 'ellis', text: 'he lives out there. between bookings. we’ve had complaints' },
-        { from: 'ellis', text: 'i’m 40 min out. lock the door' },
-      ];
+      // dev URL override first, then the saved checkpoint, then a fresh game
+      const skipMap: Record<string, Checkpoint> = { '2': 'act2', '3': 'act3', '4': 'act4', '4b': 'act4b' };
       const skip = new URLSearchParams(location.search).get('act');
-      if (skip === '4' || skip === '4b') {
-        // dev skip / retry-the-night: both act three branches supported
-        for (const f of [...act1Flags, ...act2Flags, ...act3Flags]) this.flags.add(f);
-        if (skip === '4b') {
-          this.flags.add('chose_barricade');
-          this.flags.add('barricaded');
-        } else {
-          this.flags.add('chose_search');
-          this.flags.add('knows_keys');
-          this.flags.add('hatch_seen');
-        }
-        this.phone.msgs.push(...act1Msgs, ...act2Msgs, ...act3Msgs);
-        this.run(actFour(this));
-      } else if (skip === '3') {
-        // dev skip: nightfall of day two, keys already missing
-        for (const f of [...act1Flags, ...act2Flags]) this.flags.add(f);
-        this.phone.msgs.push(...act1Msgs, ...act2Msgs);
-        this.run(actThree(this));
-      } else if (skip === '2') {
-        // dev skip: start on the morning of day two with act one resolved
-        for (const f of act1Flags) this.flags.add(f);
-        this.phone.msgs.push(...act1Msgs);
-        this.run(actTwo(this));
-      } else {
-        this.run(actOne(this));
-      }
+      this.startFrom(skip && skipMap[skip] ? skipMap[skip] : this.savedCp);
     });
+  }
+
+  // Rebuild the world state a checkpoint implies and start its act script.
+  private startFrom(cp: Checkpoint | null): void {
+    const act1Flags = ['lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight', 'bag_dropped', 'ellis_done'];
+    const act2Flags = ['act2', 'clue_guestbook', 'clue_backroom', 'clue_toothbrush', 'warm_noticed', 'boxes_moved', 'clue_duffel', 'mug_rinsed', 'leave_early', 'keys_gone', 'act2_done'];
+    const act3Flags = ['act3', 'chair_moved', 'pantry_ajar', 'call_answered', 'power_out', 'hatch_open', 'act3_done'];
+    const act1Msgs: Msg[] = [
+      { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
+      { from: 'ellis', text: 'wasn’t me. haven’t been out there in a week' },
+      { from: 'ellis', text: 'cleaner mustve left it. enjoy your stay' },
+    ];
+    const act2Msgs: Msg[] = [
+      { from: 'sam', text: 'hey weird q, does anyone else stay at cedar hollow between guests? found some clothes and stuff', status: 'delivered' },
+      { from: 'ellis', text: 'no. just you this weekend' },
+      { from: 'ellis', text: 'why, is someone there?' },
+    ];
+    const act3Msgs: Msg[] = [
+      { from: 'ellis', text: 'i called the sheriff. stay in a locked room. do NOT go in the crawlspace' },
+      { from: 'ellis', text: 'he lives out there. between bookings. we’ve had complaints' },
+      { from: 'ellis', text: 'i’m 40 min out. lock the door' },
+    ];
+    if (cp === 'act4' || cp === 'act4b') {
+      for (const f of [...act1Flags, ...act2Flags, ...act3Flags]) this.flags.add(f);
+      if (cp === 'act4b') {
+        this.flags.add('chose_barricade');
+        this.flags.add('barricaded');
+      } else {
+        this.flags.add('chose_search');
+        this.flags.add('knows_keys');
+        this.flags.add('hatch_seen');
+      }
+      this.phone.msgs.push(...act1Msgs, ...act2Msgs, ...act3Msgs);
+      this.run(actFour(this));
+    } else if (cp === 'act3') {
+      for (const f of [...act1Flags, ...act2Flags]) this.flags.add(f);
+      this.phone.msgs.push(...act1Msgs, ...act2Msgs);
+      this.run(actThree(this));
+    } else if (cp === 'act2') {
+      for (const f of act1Flags) this.flags.add(f);
+      this.phone.msgs.push(...act1Msgs);
+      this.run(actTwo(this));
+    } else {
+      this.run(actOne(this));
+    }
   }
 
   flag(n: string): boolean {
@@ -210,12 +216,13 @@ export class Game {
     this.time += dt;
 
     if (this.state === 'end') {
-      if (pressed('r')) {
-        // being caught restarts the night, not the whole weekend
-        if (this.flag('caught')) location.search = this.flag('chose_barricade') ? 'act=4b' : 'act=4';
-        else location.reload();
-      }
+      // the checkpoint save means R lands on "continue — the night"
+      if (pressed('r')) location.reload();
       return;
+    }
+    if (this.state === 'title' && this.savedCp && pressed('n')) {
+      clearSave();
+      this.savedCp = null;
     }
     if (this.state !== 'play') return;
 
@@ -404,7 +411,17 @@ export class Game {
     const pulse = 0.45 + 0.35 * Math.sin(this.time * 2.5);
     ctx.font = '13px -apple-system, "Segoe UI", sans-serif';
     ctx.fillStyle = `rgba(200,208,225,${this.state === 'loading' ? 0.8 : pulse})`;
-    ctx.fillText(this.state === 'loading' ? 'loading…' : 'click to begin', W / 2, 412);
+    const prompt = this.state === 'loading'
+      ? 'loading…'
+      : this.savedCp
+        ? `click to continue — ${CHECKPOINT_LABELS[this.savedCp]}`
+        : 'click to begin';
+    ctx.fillText(prompt, W / 2, 412);
+    if (this.savedCp && this.state !== 'loading') {
+      ctx.font = '11px -apple-system, "Segoe UI", sans-serif';
+      ctx.fillStyle = '#5b657c';
+      ctx.fillText('N — new game', W / 2, 436);
+    }
     ctx.font = '11px -apple-system, "Segoe UI", sans-serif';
     ctx.fillStyle = '#4c5468';
     ctx.fillText('A/D or ←/→  walk     E  interact     F  flashlight     TAB  phone', W / 2, 472);

@@ -1,4 +1,5 @@
 import { waitFlag, delayedSay } from './script';
+import { saveCheckpoint } from './save';
 import { actThree } from './act3';
 import type { Game } from './game';
 import type { Co } from './types';
@@ -6,6 +7,7 @@ import type { Co } from './types';
 // ACT TWO — the house is wrong. Daylight, four clues, the midpoint text,
 // and the empty key hook.
 export function* actTwo(g: Game): Co {
+  saveCheckpoint('act2');
   g.setFlag('act2');
   g.endText = 'end of act two — vertical slice';
   g.cutscene = true;

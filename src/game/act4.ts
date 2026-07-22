@@ -1,6 +1,7 @@
 import { anyPressed } from '../engine/input';
 import { FLOOR_Y } from './world';
 import { delayedSay } from './script';
+import { saveCheckpoint } from './save';
 import type { Game } from './game';
 import type { Co, Ctx2D } from './types';
 
@@ -312,6 +313,7 @@ export function* actFour(g: Game): Co {
   g.fade = 1;
   tenant.room = null;
   const barricaded = g.flag('chose_barricade');
+  saveCheckpoint(barricaded ? 'act4b' : 'act4');
 
   g.onRoomEnter = (id) => {
     if (id === 'backroom' && !g.flag('a4_backroom')) {

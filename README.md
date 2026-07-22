@@ -62,9 +62,16 @@ lights and the knock — the duffel is gone and the crawlspace is empty.
 a shadow grows across it, and the title card comes back with the lit window
 dark. Being caught restarts the night, not the weekend.
 
+**Saving.** The game autosaves a checkpoint at the start of each act
+(branch-aware in Act Four) to the browser's localStorage — no server or
+database involved, so it deploys as a plain static site. The title screen
+offers "continue" from the last checkpoint or `N` for a new game, and `R`
+after being caught lands back on the night, not the whole weekend. Saves
+are per-browser/per-device; clearing site data clears them.
+
 Dev shortcuts: open the game with `?act=2` (second morning), `?act=3`
 (nightfall, keys missing), `?act=4` (the night, search branch), or `?act=4b`
-(the night, barricaded) to skip ahead with earlier acts resolved.
+(the night, barricaded). The URL overrides the saved checkpoint.
 
 ## Sound
 

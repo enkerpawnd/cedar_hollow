@@ -1,5 +1,4 @@
 import { drawExterior, drawMain, drawBedroom, drawBackroom, drawBathroom, drawPantry } from './world';
-import { delayedSay } from './script';
 import { barricadeCo, searchCo } from './act3';
 import { endingA, unbarricadeCo } from './act4';
 import type { Game } from './game';
@@ -14,7 +13,7 @@ function examine(id: string, x: number, label: string, first: string, repeat: st
     id, x, y, label,
     enabled: enabled ?? always,
     use(g) {
-      g.say(seen ? repeat : first);
+      g.remark(seen ? repeat : first);
       seen = true;
     },
   };
@@ -86,10 +85,12 @@ export function buildRooms(): Record<string, Room> {
         use(g) {
           if (!g.flag('lockbox_seen')) {
             g.setFlag('lockbox_seen');
-            g.say('Host said the code was 4-4-9-1. Box is already open. Key’s just... out.');
-            g.run(delayedSay(g, 4.5, 'Maybe he swung by to leave the heat on.'));
+            g.remark(
+              'Host said the code was 4-4-9-1. Box is already open. Key’s just... out.',
+              'Maybe he swung by to leave the heat on.',
+            );
           } else {
-            g.say('4-4-9-1. Not that it mattered.');
+            g.remark('4-4-9-1. Not that it mattered.');
           }
         },
       },
@@ -124,11 +125,11 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (g.flag('act3')) {
-            g.say('Still empty.');
+            g.remark('Still empty.');
           } else if (!g.flag('act2')) {
-            g.say('My keys. Right where I can’t forget them.');
+            g.remark('My keys. Right where I can’t forget them.');
           } else if (!g.flag('leave_early')) {
-            g.say('Hm. Thought I hung my keys there.');
+            g.remark('Hm. Thought I hung my keys there.');
           } else if (!g.flag('keys_gone')) {
             g.setFlag('keys_gone');
             g.run(keysGone(g));
@@ -142,12 +143,12 @@ export function buildRooms(): Record<string, Room> {
           if (g.flag('act4')) {
             if (g.flag('barricaded')) g.run(unbarricadeCo(g));
             else if (g.flag('has_keys')) g.run(endingA(g));
-            else g.say('Not on foot. Not into those trees. Keys.');
-          } else if (g.flag('barricaded')) g.say('The sofa stays where it is.');
-          else if (g.flag('act3')) g.say('Two hours of dark road, on foot, with him out here? No.');
-          else if (!g.flag('act2')) g.say('I just got here. The quiet can wait until Monday.');
-          else if (g.flag('leave_early')) g.say('Keys first.');
-          else g.say('Coffee, pack, lake loop. That was the plan, anyway.');
+            else g.remark('Not on foot. Not into those trees. Keys.');
+          } else if (g.flag('barricaded')) g.remark('The sofa stays where it is.');
+          else if (g.flag('act3')) g.remark('Two hours of dark road, on foot, with him out here? No.');
+          else if (!g.flag('act2')) g.remark('I just got here. The quiet can wait until Monday.');
+          else if (g.flag('leave_early')) g.remark('Keys first.');
+          else g.remark('Coffee, pack, lake loop. That was the plan, anyway.');
         },
       },
       {
@@ -158,7 +159,7 @@ export function buildRooms(): Record<string, Room> {
             g.setFlag('lights_main');
             g.sound.play('switch', { vol: 0.4 });
           } else {
-            g.say('Nothing else on the panel.');
+            g.remark('Nothing else on the panel.');
           }
         },
       },
@@ -174,9 +175,9 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (g.flag('act2')) {
-            g.say('Cold. Burned itself out overnight.');
+            g.remark('Cold. Burned itself out overnight.');
           } else {
-            g.say(stoveSeen ? 'Warm.' : 'Still going. Somebody fed it recently.');
+            g.remark(stoveSeen ? 'Warm.' : 'Still going. Somebody fed it recently.');
             stoveSeen = true;
           }
         },
@@ -186,15 +187,17 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (!g.flag('act2')) {
-            g.say('Guestbook. I’ll sign it on the way out.');
+            g.remark('Guestbook. I’ll sign it on the way out.');
           } else if (!g.flag('clue_guestbook')) {
             g.setFlag('clue_guestbook');
-            g.say('Guestbook. “Perfect week. So peaceful — Dana & Mike.”');
-            g.say('“Lovely cabin, but we decided to leave earl—” It just stops.');
-            g.say('The last three entries all left early.');
-            g.say('The newest one is four words. “don’t use the back room.”');
+            g.remark(
+              'Guestbook. “Perfect week. So peaceful — Dana & Mike.”',
+              '“Lovely cabin, but we decided to leave earl—” It just stops.',
+              'The last three entries all left early.',
+              'The newest one is four words. “don’t use the back room.”',
+            );
           } else {
-            g.say('“don’t use the back room.”');
+            g.remark('“don’t use the back room.”');
           }
         },
       },
@@ -203,13 +206,13 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (g.flag('act2')) {
-            g.say(g.flag('mug_rinsed') ? 'Put back like nothing happened.' : 'It’s been rinsed. And put back on the counter.');
+            g.remark(g.flag('mug_rinsed') ? 'Put back like nothing happened.' : 'It’s been rinsed. And put back on the counter.');
             g.setFlag('mug_rinsed');
           } else if (!g.flag('mug_seen')) {
             g.setFlag('mug_seen');
-            g.say('Still warm. Okay. He was just here. That’s fine. That’s normal.');
+            g.remark('Still warm. Okay. He was just here. That’s fine. That’s normal.');
           } else {
-            g.say('Half a cup. Not mine.');
+            g.remark('Half a cup. Not mine.');
           }
         },
       },
@@ -220,12 +223,11 @@ export function buildRooms(): Record<string, Room> {
           if (g.flag('bulb_popped') && !g.flag('has_flashlight')) {
             g.setFlag('has_flashlight');
             g.sound.play('pickup', { vol: 0.5 });
-            g.say('Flashlight. Batteries work. Good.');
-            g.run(delayedSay(g, 3.5, 'F to switch it on.'));
+            g.remark('Flashlight. Batteries work. Good.', 'F to switch it on.');
           } else if (g.flag('has_flashlight')) {
-            g.say('Just the junk now.');
+            g.remark('Just the junk now.');
           } else {
-            g.say('Rubber bands. A dead lighter. Takeout menus.');
+            g.remark('Rubber bands. A dead lighter. Takeout menus.');
           }
         },
       },
@@ -252,9 +254,9 @@ export function buildRooms(): Record<string, Room> {
         id: 'bd_window', x: 245, y: 330, label: 'window',
         enabled: always,
         use(g) {
-          if (g.isDay()) g.say('Grey sky. Flat lake. Nobody for miles. That used to be the good part.');
-          else if (g.flag('act3')) g.say('Black glass again. Anything could be standing out there.');
-          else g.say(g.flag('bd_window_seen') ? 'Just my reflection. Pines behind it.' : 'Black glass. The lake’s out there somewhere.');
+          if (g.isDay()) g.remark('Grey sky. Flat lake. Nobody for miles. That used to be the good part.');
+          else if (g.flag('act3')) g.remark('Black glass again. Anything could be standing out there.');
+          else g.remark(g.flag('bd_window_seen') ? 'Just my reflection. Pines behind it.' : 'Black glass. The lake’s out there somewhere.');
           g.setFlag('bd_window_seen');
         },
       },
@@ -263,17 +265,17 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (g.flag('act4')) {
-            g.say('No time. No chance.');
+            g.remark('No time. No chance.');
           } else if (g.flag('act3')) {
-            g.say('Not even as a joke.');
+            g.remark('Not even as a joke.');
           } else if (g.flag('act2')) {
-            g.say(g.flag('leave_early') ? 'No. I’m done sleeping in this house.' : 'I just got up.');
+            g.remark(g.flag('leave_early') ? 'No. I’m done sleeping in this house.' : 'I just got up.');
           } else if (!g.flag('bag_dropped')) {
             g.setFlag('bag_dropped');
             g.sound.play('thump', { vol: 0.5 });
-            g.say('Home for three days.');
+            g.remark('Home for three days.');
           } else if (!g.flag('ellis_done')) {
-            g.say('Should let Ellis know I made it, first.');
+            g.remark('Should let Ellis know I made it, first.');
           } else {
             g.setFlag('slept');
           }
@@ -281,8 +283,13 @@ export function buildRooms(): Record<string, Room> {
       },
       {
         id: 'closet', x: 720, y: 340, label: 'closet',
-        enabled: (g) => g.flag('act4') && !g.flag('setpiece_active') && !g.flag('ending'),
+        enabled: (g) => !g.flag('setpiece_active') && !g.flag('ending'),
         use(g) {
+          if (!g.flag('act4')) {
+            if (g.flag('act3')) g.remark('If I fold myself in there, I’m never coming back out. Not yet.');
+            else g.remark('Spare blankets. Wire hangers. An empty flashlight box.');
+            return;
+          }
           if (!g.player.hidden) {
             g.player.hidden = true;
             g.player.x = 720;
@@ -315,7 +322,7 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (g.flag('bulb_popped')) {
-            g.say('Nothing. Bulb’s dead.');
+            g.remark('Nothing. Bulb’s dead.');
           } else if (!g.flag('bulb_flicking')) {
             g.run(bulbPop(g));
           }
@@ -328,13 +335,12 @@ export function buildRooms(): Record<string, Room> {
           if (g.flag('act2')) {
             if (!g.flag('clue_backroom')) {
               g.setFlag('clue_backroom');
-              g.say('Someone’s been sleeping on this. Recently.');
-              g.run(delayedSay(g, 4.5, '...why is the mattress warm.'));
+              g.remark('Someone’s been sleeping on this. Recently.', '...why is the mattress warm.');
             } else {
-              g.say('Why is it warm.');
+              g.remark('Why is it warm.');
             }
           } else {
-            g.say(g.flag('mattress_seen') ? 'Storage. Sure.' : 'A mattress. No frame. ...Storage, I guess.');
+            g.remark(g.flag('mattress_seen') ? 'Storage. Sure.' : 'A mattress. No frame. ...Storage, I guess.');
             g.setFlag('mattress_seen');
           }
         },
@@ -373,14 +379,12 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (!g.flag('act2')) {
-            g.say('Rough drive. I look it.');
+            g.remark('Rough drive. I look it.');
           } else if (!g.flag('clue_toothbrush')) {
             g.setFlag('clue_toothbrush');
-            g.say('Two toothbrushes in the cup.');
-            g.say('Mine’s the blue one.');
-            g.say('The other one is wet.');
+            g.remark('Two toothbrushes in the cup.', 'Mine’s the blue one.', 'The other one is wet.');
           } else {
-            g.say('The other one is wet.');
+            g.remark('The other one is wet.');
           }
         },
       },
@@ -403,11 +407,11 @@ export function buildRooms(): Record<string, Room> {
         enabled: (g) => !g.flag('boxes_moved'),
         use(g) {
           if (!g.flag('act2')) {
-            g.say('Rice, batteries, motor oil. Stocked better than my apartment.');
+            g.remark('Rice, batteries, motor oil. Stocked better than my apartment.');
           } else {
             g.setFlag('boxes_moved');
             g.sound.play('thump', { vol: 0.35 });
-            g.say('Bulk rice. Batteries. And something soft shoved in behind, where the light doesn’t reach.');
+            g.remark('Bulk rice. Batteries. And something soft shoved in behind, where the light doesn’t reach.');
           }
         },
       },
@@ -419,9 +423,9 @@ export function buildRooms(): Record<string, Room> {
             if (!g.flag('has_keys')) {
               g.setFlag('has_keys');
               g.sound.play('pickup', { vol: 0.5 });
-              g.say(g.flag('knows_keys') ? 'Side pocket. Keys. Go.' : 'His bag— keys. My keys. Go.');
+              g.remark(g.flag('knows_keys') ? 'Side pocket. Keys. Go.' : 'His bag— keys. My keys. Go.');
             } else {
-              g.say('Go. Go, go.');
+              g.remark('Go. Go, go.');
             }
           } else if (g.flag('choice_open') && !g.flag('chose_barricade') && !g.flag('act3_done')) {
             if (!g.flag('chose_search')) {
@@ -431,11 +435,13 @@ export function buildRooms(): Record<string, Room> {
           } else if (!g.flag('clue_duffel')) {
             g.setFlag('clue_duffel');
             g.sound.play('pickup', { vol: 0.4 });
-            g.say('A duffel. Men’s clothes, worn soft. A phone charger.');
-            g.say('And a printed sheet, folded and refolded until the creases went white.');
-            g.say('My booking dates. Highlighted.');
+            g.remark(
+              'A duffel. Men’s clothes, worn soft. A phone charger.',
+              'And a printed sheet, folded and refolded until the creases went white.',
+              'My booking dates. Highlighted.',
+            );
           } else {
-            g.say('My dates. Highlighted.');
+            g.remark('My dates. Highlighted.');
           }
         },
       },

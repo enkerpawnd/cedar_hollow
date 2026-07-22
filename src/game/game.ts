@@ -143,6 +143,11 @@ export class Game {
     this.narration.say(t);
   }
 
+  // Examine chatter: replaces the previous remark, yields to story lines.
+  remark(...lines: string[]): void {
+    this.narration.remark(...lines);
+  }
+
   hint(t: string): void {
     this.hintText = t;
   }

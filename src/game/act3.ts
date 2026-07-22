@@ -164,7 +164,7 @@ export function* actThree(g: Game): Co {
   g.phone.receive('he lives out there. between bookings. we’ve had complaints', g);
   yield 4.0;
   g.phone.receive('i’m 40 min out. lock the door', g);
-  yield 4.5;
+  yield 2.2;
   g.hint('barricade the door — or go back for those keys');
   g.setFlag('choice_open');
 

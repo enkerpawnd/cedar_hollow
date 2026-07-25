@@ -41,8 +41,11 @@ export class Player {
       const r = isDown('d', 'arrowright');
       vx = (r ? 1 : 0) - (l ? 1 : 0);
     }
-    this.running = vx !== 0 && g.flag('act4') && isDown('shift');
-    const speed = this.running ? RUN_SPEED : SPEED;
+    // under the house you crawl. nobody runs in a hundred-and-thirty
+    // centimeters of headroom.
+    const crawl = g.room.id === 'crawl';
+    this.running = vx !== 0 && g.flag('act4') && isDown('shift') && !crawl;
+    const speed = (this.running ? RUN_SPEED : SPEED) * (crawl ? 0.55 : 1);
     if (vx !== 0) this.facing = vx > 0 ? 1 : -1;
     this.x = Math.max(36, Math.min(g.room.w - 36, this.x + vx * speed * dt));
     this.walking = vx !== 0;
@@ -70,8 +73,29 @@ export class Player {
     const bobY = Math.sin(this.bob) * (this.walking ? 1.6 : 0.8);
     const stride = this.walking ? Math.sin(this.bob) * 7 : 0;
 
-    // duffel bag until it's put down
-    if (!g.flag('bag_dropped')) {
+    if (g.room.id === 'crawl') {
+      // hands and knees: a low hunched shape, head ducked under the joists
+      ctx.fillStyle = '#04050a';
+      ctx.beginPath();
+      ctx.roundRect(x - 16, fy - 40 + bobY * 0.6, 32, 26, 10);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(x + this.facing * 16, fy - 44 + bobY * 0.6, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#04050a';
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x + this.facing * 10, fy - 24);
+      ctx.lineTo(x + this.facing * 16 + stride * 0.4, fy - 2);
+      ctx.moveTo(x - this.facing * 8, fy - 22);
+      ctx.lineTo(x - this.facing * 14 - stride * 0.4, fy - 2);
+      ctx.stroke();
+      return;
+    }
+
+    // duffel bag until it's put down — and again once it's packed to leave
+    if (!g.flag('bag_dropped') || g.flag('packed_bag')) {
       ctx.fillStyle = '#04050a';
       ctx.beginPath();
       ctx.roundRect(x - this.facing * 22 - 8, fy - 58 + bobY, 18, 24, 5);

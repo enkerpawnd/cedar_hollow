@@ -1,4 +1,4 @@
-import { drawExterior, drawMain, drawBedroom, drawBackroom, drawBathroom, drawPantry } from './world';
+import { drawExterior, drawMain, drawBedroom, drawBackroom, drawBathroom, drawPantry, drawShed, drawLake, drawCrawl } from './world';
 import { barricadeCo, searchCo } from './act3';
 import { endingA, unbarricadeCo } from './act4';
 import type { Game } from './game';
@@ -78,7 +78,52 @@ export function buildRooms(): Record<string, Room> {
       { x: 1176, y: 400, r: 210, strength: 0.6, on: (g) => g.flag('tenant_doorway') },
     ],
     items: [
-      examine('car', 195, 'your car', 'Two hours of dirt road to get here. That was the point.', "It'll be fine in the driveway.", 380, (g) => !g.flag('entered')),
+      {
+        id: 'car', x: 195, y: 380, label: 'your car',
+        enabled: always,
+        use(g) {
+          if (g.flag('act3')) {
+            g.remark('Locked. Doing its one job at the worst possible time.');
+          } else if (g.flag('act2')) {
+            g.remark('Still here. At least the car waited.');
+          } else if (!g.flag('entered')) {
+            g.remark('Two hours of dirt road to get here. That was the point.', 'It’ll be fine in the driveway.');
+          } else {
+            g.remark('It’ll be fine in the driveway.');
+          }
+        },
+      },
+      {
+        id: 'lake_path', x: 66, y: 400, label: 'path to the lake',
+        enabled: always,
+        use(g) {
+          if (g.flag('act3')) g.remark('Not down that path in the dark. Absolutely not.');
+          else if (g.isDay()) g.gotoRoom('lake', 870, -1, { quiet: true });
+          else g.remark('The listing said “lake views.” The lake can wait for daylight.');
+        },
+      },
+      {
+        id: 'shed_door', x: 470, y: 380, label: 'woodshed',
+        enabled: always,
+        use(g) {
+          if (g.flag('act3')) {
+            g.remark('Nothing of mine in the shed. And no light in there either.');
+          } else if (g.flag('act2')) {
+            g.gotoRoom('shed', 130);
+          } else if (!g.flag('shed_seen')) {
+            g.setFlag('shed_seen');
+            g.remark('Padlocked. Not part of the rental, I guess.', 'New lock, though. Shiny new lock on a falling-down shed.');
+          } else {
+            g.remark('Not my shed, not my problem.');
+          }
+        },
+      },
+      examine(
+        'woodpile', 602, 'woodpile',
+        'Split and stacked. Somebody keeps up with this place.',
+        'More than a weekend’s worth of wood.',
+        420,
+      ),
       {
         id: 'lockbox', x: 1213, y: 360, label: 'lockbox',
         enabled: always,
@@ -144,11 +189,29 @@ export function buildRooms(): Record<string, Room> {
             if (g.flag('barricaded')) g.run(unbarricadeCo(g));
             else if (g.flag('has_keys')) g.run(endingA(g));
             else g.remark('Not on foot. Not into those trees. Keys.');
-          } else if (g.flag('barricaded')) g.remark('The sofa stays where it is.');
-          else if (g.flag('act3')) g.remark('Two hours of dark road, on foot, with him out here? No.');
-          else if (!g.flag('act2')) g.remark('I just got here. The quiet can wait until Monday.');
-          else if (g.flag('leave_early')) g.remark('Keys first.');
-          else g.remark('Coffee, pack, lake loop. That was the plan, anyway.');
+          } else if (g.flag('choice_open') || g.flag('chose_barricade') || g.flag('chose_search')) {
+            g.remark(g.flag('barricaded') ? 'The sofa stays where it is.' : 'Not out there. Not now.');
+          } else if (g.flag('leave_early') && g.flag('keys_gone')) {
+            g.remark('Keys first.');
+          } else {
+            g.gotoRoom('exterior', 1108, -1);
+          }
+        },
+      },
+      {
+        id: 'main_window', x: 230, y: 300, label: 'window',
+        enabled: always,
+        use(g) {
+          if (g.isDay()) g.remark('Grey light, grey yard. The car, the shed, the trees.');
+          else if (g.flag('act3')) g.remark('My own face over a black yard. Anything could be ten feet past the glass.');
+          else g.remark('Black yard. The car is a shape. The trees are a wall.');
+        },
+      },
+      {
+        id: 'coat', x: 300, y: 355, label: 'your jacket',
+        enabled: always,
+        use(g) {
+          g.remark('My jacket, over the sofa arm. Making the place look lived-in.');
         },
       },
       {
@@ -282,6 +345,13 @@ export function buildRooms(): Record<string, Room> {
         },
       },
       {
+        id: 'nightstand', x: 610, y: 400, label: 'nightstand',
+        enabled: always,
+        use(g) {
+          g.remark('A lamp, a drawer, a bible with a soft spine.');
+        },
+      },
+      {
         id: 'closet', x: 720, y: 340, label: 'closet',
         enabled: (g) => !g.flag('setpiece_active') && !g.flag('ending'),
         use(g) {
@@ -359,6 +429,13 @@ export function buildRooms(): Record<string, Room> {
         330,
         (g) => g.flag('has_flashlight') && g.player.flashOn,
       ),
+      {
+        id: 'hatch', x: 324, y: 445, label: 'crawlspace hatch',
+        enabled: (g) => g.flag('hatch_open'),
+        use(g) {
+          g.remark('Ellis said do not go in the crawlspace.', 'For once, Ellis and I want the same thing.');
+        },
+      },
     ],
   };
 
@@ -448,5 +525,73 @@ export function buildRooms(): Record<string, Room> {
     ],
   };
 
-  return { exterior, main, bedroom, backroom, bathroom, pantry };
+  const shed: Room = {
+    id: 'shed',
+    w: 520,
+    ambient: 0.85,
+    ambientDay: 0.5,
+    ambientNight: 0.94,
+    draw: drawShed,
+    lights: [],
+    items: [
+      {
+        id: 'shed_out', x: 80, y: 330, label: 'yard',
+        enabled: always,
+        use(g) {
+          g.gotoRoom('exterior', 470);
+        },
+      },
+      examine(
+        'pegboard', 210, 'pegboard',
+        'Tools hung in careful rows. Hammer. Saw. Pliers.',
+        'One outline is empty. Something with a short handle and a heavy head.',
+        320,
+      ),
+      examine(
+        'bench', 385, 'workbench',
+        'Wood shavings, fresh enough to smell. A vise, wiped clean.',
+        'Somebody uses this bench. Often.',
+        380,
+      ),
+    ],
+  };
+
+  const lake: Room = {
+    id: 'lake',
+    w: 960,
+    ambient: 0.55,
+    ambientDay: 0.26,
+    ambientNight: 0.9,
+    draw: drawLake,
+    lights: [],
+    items: [
+      {
+        id: 'lake_back', x: 905, y: 430, label: 'back to the cabin',
+        enabled: always,
+        use(g) {
+          g.gotoRoom('exterior', 120, 1, { quiet: true });
+        },
+      },
+      examine(
+        'dock', 200, 'dock',
+        'Boards gone soft at the ends. The water doesn’t move at all.',
+        'Flat. Cold. Honest, at least.',
+        420,
+      ),
+    ],
+  };
+
+  const crawl: Room = {
+    id: 'crawl',
+    w: 1100,
+    ambient: 0.96,
+    draw: drawCrawl,
+    lights: [
+      { x: 1015, y: 400, r: 150, strength: 0.3, on: (g) => g.flag('hatch_open') && !g.flag('hatch_blocked') },
+      { x: 57, y: 442, r: 90, strength: 0.25, on: (g) => g.flag('vent_open') },
+    ],
+    items: [],
+  };
+
+  return { exterior, main, bedroom, backroom, bathroom, pantry, shed, lake, crawl };
 }

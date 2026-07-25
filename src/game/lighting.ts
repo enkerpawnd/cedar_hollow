@@ -30,7 +30,9 @@ export function renderLighting(g: Game, cam: number): Glow[] {
   const t = g.time;
   const glows: Glow[] = [];
 
-  let ambient = g.isDay() && room.ambientDay !== undefined ? room.ambientDay : room.ambient;
+  let ambient = room.ambient;
+  if (g.isDay() && room.ambientDay !== undefined) ambient = room.ambientDay;
+  else if (g.flag('act3') && room.ambientNight !== undefined) ambient = room.ambientNight;
   if (g.flag('power_out')) ambient = Math.min(0.97, ambient + 0.15);
 
   lctx.save();
@@ -79,7 +81,8 @@ export function renderLighting(g: Game, cam: number): Glow[] {
   } else if (g.player.flashOn && g.flag('has_flashlight')) {
     const facing = g.player.facing;
     const ox = px + facing * 14;
-    const oy = FLOOR_Y - 68;
+    // crouched under the house, the beam rides low
+    const oy = FLOOR_Y - (room.id === 'crawl' ? 40 : 68);
     const R = 360;
     const ang = (facing === 1 ? 0 : Math.PI) + Math.sin(g.player.bob * 0.7) * 0.025 + 0.04 * facing;
     const spread = 0.21;

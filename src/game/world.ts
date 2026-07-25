@@ -113,48 +113,129 @@ function ceilingLamp(ctx: Ctx2D, x: number, lit: boolean): void {
   }
 }
 
-// --- Exterior: driveway at dusk, cabin against the pines ---
+// --- Exterior: driveway, cabin against the pines. Dusk on arrival, grey
+// morning the second day, true dark from Act Three on. ---
 
 export function drawExterior(ctx: Ctx2D, g: Game): void {
   const w = 1400;
   const t = g.time;
+  const day = g.isDay();
+  const night = g.flag('act3');
 
   const sky = ctx.createLinearGradient(0, 0, 0, 460);
-  sky.addColorStop(0, '#0a0e1f');
-  sky.addColorStop(0.55, '#141b34');
-  sky.addColorStop(0.92, '#39262b');
+  if (day) {
+    sky.addColorStop(0, '#3f4a5e');
+    sky.addColorStop(0.6, '#5b6579');
+    sky.addColorStop(1, '#6e7787');
+  } else if (night) {
+    sky.addColorStop(0, '#03040a');
+    sky.addColorStop(0.6, '#080c18');
+    sky.addColorStop(1, '#0b1020');
+  } else {
+    sky.addColorStop(0, '#0a0e1f');
+    sky.addColorStop(0.55, '#141b34');
+    sky.addColorStop(0.92, '#39262b');
+  }
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, w, 460);
 
-  for (let i = 0; i < 44; i++) {
-    const x = srand(i) * w;
-    const y = srand(i + 99) * 250;
-    const a = (0.15 + 0.35 * srand(i + 7)) * (0.6 + 0.4 * Math.sin(t * (0.6 + srand(i)) + i));
-    ctx.fillStyle = `rgba(200,210,255,${Math.max(0, a)})`;
-    ctx.fillRect(x, y, 1.6, 1.6);
+  if (!day) {
+    const dim = night ? 0.6 : 1;
+    for (let i = 0; i < 44; i++) {
+      const x = srand(i) * w;
+      const y = srand(i + 99) * 250;
+      const a = (0.15 + 0.35 * srand(i + 7)) * (0.6 + 0.4 * Math.sin(t * (0.6 + srand(i)) + i)) * dim;
+      ctx.fillStyle = `rgba(200,210,255,${Math.max(0, a)})`;
+      ctx.fillRect(x, y, 1.6, 1.6);
+    }
+  } else {
+    // low cloud, moving barely
+    for (let i = 0; i < 6; i++) {
+      const cx = ((srand(i + 30) * w + t * 3.5) % (w + 300)) - 150;
+      ctx.fillStyle = 'rgba(200,208,220,0.05)';
+      ctx.beginPath();
+      ctx.ellipse(cx, 60 + srand(i + 41) * 90, 130 + srand(i) * 70, 16, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   for (let i = 0; i < 30; i++) {
     const x = i * 52 + srand(i) * 34;
-    pine(ctx, x, 452, 90 + srand(i + 3) * 70, '#0b0e18');
+    pine(ctx, x, 452, 90 + srand(i + 3) * 70, day ? '#252e40' : '#0b0e18');
   }
 
-  ctx.fillStyle = '#0c0e15';
+  ctx.fillStyle = day ? '#1a1f2b' : '#0c0e15';
   ctx.fillRect(0, 445, w, H - 445);
 
-  for (const x of [36, 320, 610, 706, 1356]) {
-    pine(ctx, x, 470, 170 + srand(x) * 70, '#060810');
+  for (const x of [36, 320, 706, 1356]) {
+    pine(ctx, x, 470, 170 + srand(x) * 70, day ? '#131926' : '#060810');
+  }
+
+  // the lake path: a break in the treeline, west end of the property
+  ctx.fillStyle = day ? '#232936' : '#101320';
+  ctx.beginPath();
+  ctx.moveTo(20, 470);
+  ctx.lineTo(96, 470);
+  ctx.lineTo(66, 445);
+  ctx.lineTo(38, 445);
+  ctx.closePath();
+  ctx.fill();
+  // little wooden sign
+  ctx.fillStyle = day ? '#2b3040' : '#0d1018';
+  ctx.fillRect(88, 408, 4, 40);
+  ctx.fillRect(74, 402, 32, 12);
+
+  // the woodshed, padlocked until it isn't
+  ctx.fillStyle = day ? '#171c28' : '#05060b';
+  ctx.beginPath();
+  ctx.moveTo(370, 352);
+  ctx.lineTo(470, 312);
+  ctx.lineTo(570, 352);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = day ? '#1c2230' : '#070910';
+  ctx.fillRect(382, 350, 176, 108);
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1;
+  for (let x = 396; x < 556; x += 16) {
+    ctx.beginPath();
+    ctx.moveTo(x, 352);
+    ctx.lineTo(x, 456);
+    ctx.stroke();
+  }
+  // shed door + hasp; the padlock is gone from the second morning on
+  ctx.fillStyle = day ? '#12161f' : '#04050a';
+  ctx.fillRect(448, 366, 44, 92);
+  ctx.fillStyle = day ? '#2b3345' : '#151a26';
+  ctx.fillRect(486, 404, 10, 6);
+  if (!g.flag('act2')) {
+    ctx.fillStyle = day ? '#3a4258' : '#1d2334';
+    ctx.beginPath();
+    ctx.roundRect(488, 408, 9, 12, 3);
+    ctx.fill();
+  }
+
+  // woodpile between the shed and the drive
+  ctx.fillStyle = day ? '#151a26' : '#0b0e16';
+  for (const [lx, ly] of [[586, 458], [602, 458], [618, 458], [594, 446], [610, 446], [602, 434]] as const) {
+    ctx.beginPath();
+    ctx.arc(lx, ly, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.arc(lx, ly, 4, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   // cabin
-  ctx.fillStyle = '#05060b';
+  ctx.fillStyle = day ? '#141927' : '#05060b';
   ctx.beginPath();
   ctx.moveTo(920, 302);
   ctx.lineTo(1170, 205);
   ctx.lineTo(1420, 302);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = '#080a10';
+  ctx.fillStyle = day ? '#181e2c' : '#080a10';
   ctx.fillRect(950, 300, 440, 158);
   ctx.strokeStyle = 'rgba(0,0,0,0.35)';
   ctx.lineWidth = 1;
@@ -164,46 +245,76 @@ export function drawExterior(ctx: Ctx2D, g: Game): void {
     ctx.lineTo(1390, y);
     ctx.stroke();
   }
-
-  // chimney with smoke: the stove is going before anyone should be home
-  ctx.fillStyle = '#060810';
-  ctx.fillRect(1290, 218, 20, 62);
-  for (let i = 0; i < 5; i++) {
-    const rise = (t * 13 + i * 30) % 150;
-    const a = 0.06 * (1 - rise / 150);
-    ctx.fillStyle = `rgba(180,190,210,${a})`;
+  // lattice skirting: the crawlspace runs under the whole thing
+  ctx.fillStyle = day ? '#10141f' : '#04050a';
+  ctx.fillRect(950, 458, 440, 12);
+  ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+  for (let x = 958; x < 1390; x += 14) {
     ctx.beginPath();
-    ctx.arc(1300 + Math.sin(t * 0.7 + i * 2) * (6 + rise * 0.12), 214 - rise, 6 + rise * 0.09, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.moveTo(x, 458);
+    ctx.lineTo(x + 8, 470);
+    ctx.stroke();
+  }
+
+  // chimney; smoke only while the stove is alive (the first night)
+  ctx.fillStyle = day ? '#141927' : '#060810';
+  ctx.fillRect(1290, 218, 20, 62);
+  if (!g.flag('act2')) {
+    for (let i = 0; i < 5; i++) {
+      const rise = (t * 13 + i * 30) % 150;
+      const a = 0.06 * (1 - rise / 150);
+      ctx.fillStyle = `rgba(180,190,210,${a})`;
+      ctx.beginPath();
+      ctx.arc(1300 + Math.sin(t * 0.7 + i * 2) * (6 + rise * 0.12), 214 - rise, 6 + rise * 0.09, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
 
   // porch
-  ctx.fillStyle = '#0a0c12';
+  ctx.fillStyle = day ? '#161b27' : '#0a0c12';
   ctx.fillRect(1120, 455, 190, 8);
-  ctx.fillStyle = '#07080e';
+  ctx.fillStyle = day ? '#11151f' : '#07080e';
   ctx.fillRect(1138, 382, 6, 74);
   ctx.fillRect(1262, 382, 6, 74);
 
   // front door
-  ctx.fillStyle = '#04050a';
+  ctx.fillStyle = day ? '#0d1119' : '#04050a';
   ctx.fillRect(1151, 333, 50, 124);
   ctx.fillStyle = '#2a3040';
   ctx.beginPath();
   ctx.arc(1191, 398, 2.5, 0, Math.PI * 2);
   ctx.fill();
 
-  // the one lit window
-  windowPane(ctx, 1000, 350, 46, 40, '#f5a94e');
+  // the window: lit at dusk, dark glass by day, dead when the power goes
+  const glass = g.flag('power_out') ? '#0a0f1d' : day ? '#1b2331' : '#f5a94e';
+  windowPane(ctx, 1000, 350, 46, 40, glass);
 
   // sill, key, open lockbox
-  ctx.fillStyle = '#0a0c13';
+  ctx.fillStyle = day ? '#141927' : '#0a0c13';
   ctx.fillRect(994, 392, 58, 4);
-  ctx.fillStyle = '#c8b06a';
-  ctx.fillRect(1016, 388, 9, 3);
+  if (!g.flag('entered')) {
+    ctx.fillStyle = '#c8b06a';
+    ctx.fillRect(1016, 388, 9, 3);
+  }
   ctx.fillStyle = '#10141f';
   ctx.fillRect(1206, 398, 15, 17);
   ctx.fillStyle = '#151a28';
   ctx.fillRect(1202, 390, 15, 5);
+
+  // boot prints under the window, pressed into the mud. morning only —
+  // by night you'd never see them, and by then it doesn't matter.
+  if (day) {
+    ctx.fillStyle = 'rgba(8,10,16,0.55)';
+    for (let i = 0; i < 4; i++) {
+      ctx.save();
+      ctx.translate(972 + i * 22, 458 + (i % 2) * 5);
+      ctx.rotate(-0.35);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 9, 3.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
 
   // Sam's car
   rr(ctx, 118, 400, 152, 42, 14, '#06070b');
@@ -439,7 +550,7 @@ export function drawBedroom(ctx: Ctx2D, g: Game): void {
   ctx.fillStyle = 'rgba(255,206,143,0.5)';
   ctx.fillRect(602, 380, 16, 3);
 
-  if (g.flag('bag_dropped')) {
+  if (g.flag('bag_dropped') && !g.flag('packed_bag')) {
     rr(ctx, 310, 442, 42, 27, 7, '#05060a');
     ctx.strokeStyle = '#05060a';
     ctx.lineWidth = 3;
@@ -634,23 +745,368 @@ export function drawPantry(ctx: Ctx2D, g: Game): void {
     ctx.fillStyle = '#0d1019';
     ctx.fillRect(258, 428, 50, 42);
     ctx.fillRect(388, 440, 40, 30);
-    // the duffel
+    if (!g.flag('act4')) {
+      // the duffel
+      ctx.fillStyle = '#05060a';
+      ctx.beginPath();
+      ctx.roundRect(316, 434, 66, 32, 9);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(322, 442);
+      ctx.lineTo(376, 442);
+      ctx.stroke();
+      if (g.flag('clue_duffel')) {
+        // the booking sheet, out where Sam dropped it
+        ctx.fillStyle = 'rgba(200,205,216,0.85)';
+        ctx.fillRect(394, 456, 15, 11);
+        ctx.fillStyle = 'rgba(214,196,92,0.9)';
+        ctx.fillRect(396, 460, 11, 2);
+      }
+    } else {
+      // the final night: he took it back. a clean rectangle in the dust.
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(318, 440, 62, 26);
+    }
+  }
+}
+
+// --- Woodshed: tools, one empty outline, and the tally marks ---
+
+export function drawShed(ctx: Ctx2D, g: Game): void {
+  const w = 520;
+  const day = g.isDay();
+
+  ctx.fillStyle = '#0a0c13';
+  ctx.fillRect(0, 0, w, 84);
+  ctx.fillStyle = day ? '#141827' : '#101320';
+  ctx.fillRect(0, 84, w, FLOOR_Y - 84);
+  // vertical planks
+  ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+  ctx.lineWidth = 1;
+  for (let x = 18; x < w; x += 26) {
+    ctx.beginPath();
+    ctx.moveTo(x, 84);
+    ctx.lineTo(x, FLOOR_Y);
+    ctx.stroke();
+  }
+  // dirt floor
+  ctx.fillStyle = '#0d0f16';
+  ctx.fillRect(0, FLOOR_Y, w, H - FLOOR_Y);
+
+  doorFrame(ctx, 80, true);
+
+  // gaps in the planks let thin daylight through
+  if (day) {
+    ctx.fillStyle = 'rgba(190,200,215,0.06)';
+    for (const x of [148, 252, 388, 470]) ctx.fillRect(x, 100, 3, 300);
+  }
+
+  // pegboard: tools hung neat, one shape missing
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(150, 240, 130, 110);
+  ctx.strokeStyle = '#1c2231';
+  ctx.lineWidth = 2;
+  // hammer
+  ctx.beginPath();
+  ctx.moveTo(170, 258);
+  ctx.lineTo(170, 300);
+  ctx.moveTo(160, 258);
+  ctx.lineTo(182, 258);
+  ctx.stroke();
+  // saw
+  ctx.beginPath();
+  ctx.moveTo(198, 262);
+  ctx.lineTo(238, 296);
+  ctx.lineTo(238, 306);
+  ctx.lineTo(204, 276);
+  ctx.closePath();
+  ctx.stroke();
+  // the empty outline: something with a short handle and a heavy head
+  ctx.strokeStyle = 'rgba(160,170,190,0.16)';
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(258, 262);
+  ctx.lineTo(258, 310);
+  ctx.moveTo(248, 262);
+  ctx.lineTo(272, 262);
+  ctx.lineTo(272, 274);
+  ctx.lineTo(248, 274);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // workbench
+  ctx.fillStyle = '#0b0e16';
+  ctx.fillRect(310, 396, 150, 10);
+  ctx.fillRect(318, 406, 8, 64);
+  ctx.fillRect(444, 406, 8, 64);
+  ctx.fillStyle = '#0d1019';
+  ctx.fillRect(330, 380, 26, 16);
+  ctx.fillRect(368, 386, 40, 10);
+
+  // the tallies: groups of five, scratched low on the wall
+  ctx.strokeStyle = 'rgba(200,206,220,0.22)';
+  ctx.lineWidth = 1.2;
+  for (let gi = 0; gi < 14; gi++) {
+    const gx = 96 + (gi % 7) * 42;
+    const gy = 418 + Math.floor(gi / 7) * 24;
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      ctx.moveTo(gx + i * 5, gy);
+      ctx.lineTo(gx + i * 5 + srand(gi * 9 + i) * 2 - 1, gy + 13);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.moveTo(gx - 3, gy + 10);
+    ctx.lineTo(gx + 18, gy + 3);
+    ctx.stroke();
+  }
+}
+
+// --- Lakefront: the dock, the flat water, and the camp that faces the house ---
+
+export function drawLake(ctx: Ctx2D, g: Game): void {
+  const w = 960;
+  const t = g.time;
+  const day = g.isDay();
+
+  const sky = ctx.createLinearGradient(0, 0, 0, 300);
+  if (day) {
+    sky.addColorStop(0, '#46516f');
+    sky.addColorStop(1, '#707a8b');
+  } else {
+    sky.addColorStop(0, '#05070f');
+    sky.addColorStop(1, '#0d1222');
+  }
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, w, 300);
+
+  // far shore
+  for (let i = 0; i < 24; i++) {
+    const x = i * 42 + srand(i + 60) * 30;
+    pine(ctx, x, 302, 34 + srand(i + 2) * 26, day ? '#333e52' : '#0a0e1a');
+  }
+
+  // the water
+  const water = ctx.createLinearGradient(0, 300, 0, 440);
+  water.addColorStop(0, day ? '#39445a' : '#0a0f1c');
+  water.addColorStop(1, day ? '#242c3e' : '#060911');
+  ctx.fillStyle = water;
+  ctx.fillRect(0, 300, w, 140);
+  for (let i = 0; i < 34; i++) {
+    const y = 308 + srand(i + 11) * 120;
+    const x = srand(i + 77) * (w - 60);
+    const a = (day ? 0.12 : 0.06) * (0.5 + 0.5 * Math.sin(t * 1.3 + i * 2.2));
+    ctx.strokeStyle = day ? `rgba(200,214,230,${a})` : `rgba(120,140,180,${a})`;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 14 + srand(i) * 26, y);
+    ctx.stroke();
+  }
+
+  // the bank
+  ctx.fillStyle = day ? '#1c212e' : '#0c0e16';
+  ctx.beginPath();
+  ctx.moveTo(0, 470);
+  ctx.lineTo(w, 470);
+  ctx.lineTo(w, 428);
+  ctx.quadraticCurveTo(w * 0.6, 442, 0, 438);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = day ? '#181d29' : '#0a0c13';
+  ctx.fillRect(0, FLOOR_Y, w, H - FLOOR_Y);
+
+  // the dock
+  ctx.fillStyle = day ? '#202635' : '#0d1019';
+  ctx.fillRect(96, 436, 220, 9);
+  ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+  ctx.lineWidth = 1;
+  for (let x = 106; x < 312; x += 17) {
+    ctx.beginPath();
+    ctx.moveTo(x, 436);
+    ctx.lineTo(x, 445);
+    ctx.stroke();
+  }
+  ctx.fillStyle = day ? '#181d2a' : '#090b12';
+  ctx.fillRect(112, 445, 6, 34);
+  ctx.fillRect(290, 445, 6, 30);
+
+  // the camp: fire ring, and a chair that faces the house, not the water
+  ctx.fillStyle = day ? '#12151f' : '#08090f';
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2;
+    ctx.beginPath();
+    ctx.arc(640 + Math.cos(a) * 26, 456 + Math.sin(a) * 8, 5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.fillStyle = day ? '#20242e' : '#101219';
+  ctx.beginPath();
+  ctx.ellipse(640, 456, 16, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // the chair, angled east — toward the cabin path
+  ctx.strokeStyle = day ? '#1c2231' : '#0c0f18';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(718, 468);
+  ctx.lineTo(726, 432);
+  ctx.lineTo(748, 432);
+  ctx.lineTo(752, 468);
+  ctx.moveTo(726, 432);
+  ctx.lineTo(720, 404);
+  ctx.stroke();
+  // cigarette ends by the chair leg
+  if (day) {
+    ctx.fillStyle = 'rgba(210,214,224,0.5)';
+    for (const [cx, cy] of [[760, 464], [766, 467], [757, 468]] as const) ctx.fillRect(cx, cy, 5, 2);
+  }
+
+  // the path back east, worn flat
+  ctx.fillStyle = day ? 'rgba(160,168,184,0.05)' : 'rgba(160,168,184,0.02)';
+  ctx.beginPath();
+  ctx.moveTo(800, 470);
+  ctx.lineTo(960, 470);
+  ctx.lineTo(960, 452);
+  ctx.lineTo(830, 458);
+  ctx.closePath();
+  ctx.fill();
+}
+
+// --- Crawlspace: under the whole house. Low, dry, and lived-in. ---
+
+export function drawCrawl(ctx: Ctx2D, g: Game): void {
+  const w = 1100;
+
+  ctx.fillStyle = '#020308';
+  ctx.fillRect(0, 0, w, H);
+
+  // foundation wall behind everything
+  ctx.fillStyle = '#0b0d14';
+  ctx.fillRect(0, 345, w, FLOOR_Y - 345);
+  ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+  ctx.lineWidth = 1;
+  for (let y = 365; y < FLOOR_Y; y += 26) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+  for (let x = 30; x < w; x += 52) {
+    ctx.beginPath();
+    ctx.moveTo(x, 345);
+    ctx.lineTo(x - 8, FLOOR_Y);
+    ctx.stroke();
+  }
+
+  // the floor above: joists, close enough to touch
+  ctx.fillStyle = '#0a0c13';
+  ctx.fillRect(0, 300, w, 45);
+  ctx.fillStyle = '#070910';
+  for (let x = 24; x < w; x += 84) ctx.fillRect(x, 300, 14, 50);
+  // a pipe running the length
+  ctx.strokeStyle = '#10141f';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(0, 358);
+  ctx.lineTo(w, 358);
+  ctx.stroke();
+
+  // dirt floor
+  ctx.fillStyle = '#0c0e13';
+  ctx.fillRect(0, FLOOR_Y, w, H - FLOOR_Y);
+  ctx.fillStyle = 'rgba(0,0,0,0.35)';
+  for (let i = 0; i < 20; i++) {
+    ctx.beginPath();
+    ctx.ellipse(srand(i + 5) * w, FLOOR_Y + 8 + srand(i + 9) * 40, 14, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // support posts
+  ctx.fillStyle = '#080a10';
+  for (const x of [150, 390, 620, 860]) ctx.fillRect(x - 5, 345, 10, FLOOR_Y - 345);
+
+  // THE NEST. sleeping bag, cans, and the wall of paper.
+  rr(ctx, 610, 448, 110, 18, 7, '#171b27');
+  rr(ctx, 606, 442, 34, 14, 6, '#1c2130');
+  ctx.fillStyle = '#171c28';
+  ctx.fillRect(580, 456, 8, 13);
+  ctx.fillRect(592, 460, 8, 9);
+  // papers pinned to the foundation wall, rows of them
+  for (let i = 0; i < 11; i++) {
+    const px = 640 + (i % 6) * 28 + srand(i + 21) * 6;
+    const py = 368 + Math.floor(i / 6) * 32;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate((srand(i + 44) - 0.5) * 0.2);
+    ctx.fillStyle = `rgba(190,196,210,${0.1 + srand(i) * 0.08})`;
+    ctx.fillRect(-8, -11, 16, 22);
+    ctx.restore();
+  }
+  // one photo-dark rectangle among the pale ones
+  ctx.fillStyle = 'rgba(60,70,95,0.4)';
+  ctx.fillRect(676, 390, 16, 12);
+
+  // the duffel, moved down here — until the keys leave with Sam
+  if (!g.flag('has_keys')) {
     ctx.fillStyle = '#05060a';
     ctx.beginPath();
-    ctx.roundRect(316, 434, 66, 32, 9);
+    ctx.roundRect(846, 438, 66, 30, 9);
     ctx.fill();
     ctx.strokeStyle = 'rgba(255,255,255,0.07)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(322, 442);
-    ctx.lineTo(376, 442);
+    ctx.moveTo(852, 446);
+    ctx.lineTo(906, 446);
     ctx.stroke();
-    if (g.flag('clue_duffel')) {
-      // the booking sheet, out where Sam dropped it
-      ctx.fillStyle = 'rgba(200,205,216,0.85)';
-      ctx.fillRect(394, 456, 15, 11);
-      ctx.fillStyle = 'rgba(214,196,92,0.9)';
-      ctx.fillRect(396, 460, 11, 2);
+  }
+
+  // the hatch overhead, east end: a slot of weak light — unless he's there
+  if (g.flag('hatch_open') && !g.flag('hatch_blocked')) {
+    ctx.fillStyle = 'rgba(200,214,255,0.045)';
+    ctx.beginPath();
+    ctx.moveTo(988, 302);
+    ctx.lineTo(1044, 302);
+    ctx.lineTo(1066, FLOOR_Y);
+    ctx.lineTo(966, FLOOR_Y);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.fillStyle = g.flag('hatch_blocked') ? '#010204' : '#0e1322';
+  ctx.fillRect(988, 296, 56, 8);
+  if (g.flag('hatch_blocked')) {
+    // legs, hanging through the opening. sitting on the edge. listening.
+    ctx.fillStyle = '#010205';
+    ctx.fillRect(1000, 300, 9, 52);
+    ctx.fillRect(1016, 300, 9, 46);
+  }
+
+  // the vent panel, far west: kicked loose once before, by the look of it
+  if (g.flag('vent_open')) {
+    ctx.fillStyle = '#0d1524';
+    ctx.fillRect(40, 420, 34, 44);
+    ctx.fillStyle = 'rgba(170,190,225,0.08)';
+    ctx.fillRect(40, 420, 34, 44);
+    // the panel on the dirt
+    ctx.fillStyle = '#0b0e16';
+    ctx.save();
+    ctx.translate(88, 462);
+    ctx.rotate(0.3);
+    ctx.fillRect(0, 0, 34, 6);
+    ctx.restore();
+  } else {
+    ctx.fillStyle = '#0b0e16';
+    ctx.fillRect(40, 420, 34, 44);
+    ctx.strokeStyle = 'rgba(180,190,210,0.12)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(40, 420, 34, 44);
+    for (let y = 428; y < 458; y += 8) {
+      ctx.beginPath();
+      ctx.moveTo(44, y);
+      ctx.lineTo(70, y);
+      ctx.stroke();
     }
   }
 }

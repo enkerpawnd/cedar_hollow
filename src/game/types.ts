@@ -29,6 +29,8 @@ export interface Room {
   ambient: number;
   // Darkness once morning comes (the act2 flag). Falls back to ambient.
   ambientDay?: number;
+  // Darkness once true night falls (the act3 flag). Falls back to ambient.
+  ambientNight?: number;
   lights: Light[];
   items: Interactable[];
   draw(ctx: Ctx2D, g: Game): void;

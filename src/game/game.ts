@@ -173,11 +173,11 @@ export class Game {
     this.fadeDur = dur;
   }
 
-  gotoRoom(id: string, spawnX: number, spawnFacing: 1 | -1 = 1): void {
+  gotoRoom(id: string, spawnX: number, spawnFacing: 1 | -1 = 1, opts?: { quiet?: boolean }): void {
     const g = this;
     g.run(function* (): Co {
       g.cutscene = true;
-      g.sound.play('door', { vol: 0.5 });
+      if (!opts?.quiet) g.sound.play('door', { vol: 0.5 });
       g.fadeToBlack(1, 0.3);
       yield 0.35;
       g.room = g.rooms[id];
@@ -192,18 +192,28 @@ export class Game {
   }
 
   setAmbience(): void {
-    const ext = this.room.id === 'exterior';
+    const id = this.room.id;
+    const outside = id === 'exterior' || id === 'lake';
     if (this.flag('act3')) {
       // night again, and the stove stayed dead
-      this.loopTargets.wind = ext ? 0.38 : 0.12;
+      this.loopTargets.wind = outside ? 0.42 : 0.12;
       this.loopTargets.fire = 0;
     } else if (this.flag('act2')) {
       // morning: thinner wind, and the stove burned out overnight
-      this.loopTargets.wind = ext ? 0.3 : 0.07;
+      this.loopTargets.wind = outside ? 0.3 : 0.07;
       this.loopTargets.fire = 0;
     } else {
-      this.loopTargets.wind = ext ? 0.38 : 0.1;
-      this.loopTargets.fire = ext ? 0 : 0.16;
+      this.loopTargets.wind = outside ? 0.38 : 0.1;
+      this.loopTargets.fire = outside ? 0 : 0.16;
+    }
+    if (id === 'shed') {
+      // wind through plank gaps, no stove
+      this.loopTargets.wind = 0.2;
+      this.loopTargets.fire = 0;
+    } else if (id === 'crawl') {
+      // under the house everything is muffled, including the weather
+      this.loopTargets.wind = 0.03;
+      this.loopTargets.fire = 0;
     }
   }
 

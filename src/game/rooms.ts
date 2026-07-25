@@ -1,4 +1,5 @@
 import { drawExterior, drawMain, drawBedroom, drawBackroom, drawBathroom, drawPantry, drawShed, drawLake, drawCrawl } from './world';
+import { falseStartCo } from './act1';
 import { barricadeCo, searchCo } from './act3';
 import { endingA, unbarricadeCo } from './act4';
 import type { Game } from './game';
@@ -118,12 +119,29 @@ export function buildRooms(): Record<string, Room> {
           }
         },
       },
-      examine(
-        'woodpile', 602, 'woodpile',
-        'Split and stacked. Somebody keeps up with this place.',
-        'More than a weekend’s worth of wood.',
-        420,
-      ),
+      {
+        id: 'woodpile', x: 602, y: 420, label: 'woodpile',
+        enabled: always,
+        use(g) {
+          if (!g.flag('act2') && g.flag('bag_dropped') && !g.flag('has_logs')) {
+            g.setFlag('has_logs');
+            g.sound.play('pickup', { vol: 0.45 });
+            g.run(function* (): Co {
+              g.remark('Three logs, one armload. Lumberjack stuff.');
+              yield 3.8;
+              g.sound.play('creak', { vol: 0.32, pan: -0.6, rate: 0.8 });
+              yield 1.3;
+              g.say('...Wind. Branches. Pick one and don’t think about it.');
+            }());
+          } else if (!g.flag('act2') && g.flag('has_logs') && !g.flag('logs_dropped')) {
+            g.remark('Arms are full.');
+          } else if (g.flag('act2')) {
+            g.remark('More than a weekend’s worth of wood. More than a winter’s.');
+          } else {
+            g.remark('Split and stacked. Somebody keeps up with this place.');
+          }
+        },
+      },
       {
         id: 'lockbox', x: 1213, y: 360, label: 'lockbox',
         enabled: always,
@@ -202,9 +220,16 @@ export function buildRooms(): Record<string, Room> {
         id: 'main_window', x: 230, y: 300, label: 'window',
         enabled: always,
         use(g) {
-          if (g.isDay()) g.remark('Grey light, grey yard. The car, the shed, the trees.');
-          else if (g.flag('act3')) g.remark('My own face over a black yard. Anything could be ten feet past the glass.');
-          else g.remark('Black yard. The car is a shape. The trees are a wall.');
+          if (!g.flag('act2') && g.flag('sleep_try1') && !g.flag('checked_thump')) {
+            g.setFlag('checked_thump');
+            g.remark('Nothing. Empty porch, still yard.', 'Just my own reflection, jumping at itself.');
+          } else if (g.isDay()) {
+            g.remark('Grey light, grey yard. The car, the shed, the trees.');
+          } else if (g.flag('act3')) {
+            g.remark('My own face over a black yard. Anything could be ten feet past the glass.');
+          } else {
+            g.remark('Black yard. The car is a shape. The trees are a wall.');
+          }
         },
       },
       {
@@ -239,6 +264,10 @@ export function buildRooms(): Record<string, Room> {
         use(g) {
           if (g.flag('act2')) {
             g.remark('Cold. Burned itself out overnight.');
+          } else if (g.flag('has_logs') && !g.flag('logs_dropped')) {
+            g.setFlag('logs_dropped');
+            g.sound.play('thump', { vol: 0.4 });
+            g.remark('Stacked. Morning me says thanks.');
           } else {
             g.remark(stoveSeen ? 'Warm.' : 'Still going. Somebody fed it recently.');
             stoveSeen = true;
@@ -337,8 +366,19 @@ export function buildRooms(): Record<string, Room> {
             g.setFlag('bag_dropped');
             g.sound.play('thump', { vol: 0.5 });
             g.remark('Home for three days.');
+          } else if (!g.flag('logs_dropped')) {
+            g.remark('Firewood first, or the morning me freezes.');
           } else if (!g.flag('ellis_done')) {
             g.remark('Should let Ellis know I made it, first.');
+          } else if (!g.flag('ellisB_done')) {
+            g.remark('One more text first. The stove thing is bugging me.');
+          } else if (!g.flag('unpacked')) {
+            g.remark('Road grime. Wash up first, animal.');
+          } else if (!g.flag('sleep_try1')) {
+            g.setFlag('sleep_try1');
+            g.run(falseStartCo(g));
+          } else if (!g.flag('checked_thump')) {
+            g.remark('Not until I know that was nothing.');
           } else {
             g.setFlag('slept');
           }
@@ -456,7 +496,12 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (!g.flag('act2')) {
-            g.remark('Rough drive. I look it.');
+            if (g.flag('ellisB_done') && !g.flag('unpacked')) {
+              g.setFlag('unpacked');
+              g.remark('Brushed, washed. The blue one goes in the cup.', 'There. Moved in.');
+            } else {
+              g.remark('Rough drive. I look it.');
+            }
           } else if (!g.flag('clue_toothbrush')) {
             g.setFlag('clue_toothbrush');
             g.remark('Two toothbrushes in the cup.', 'Mine’s the blue one.', 'The other one is wet.');

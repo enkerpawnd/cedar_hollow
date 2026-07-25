@@ -89,13 +89,22 @@ export class Game {
 
   // Rebuild the world state a checkpoint implies and start its act script.
   private startFrom(cp: Checkpoint | null): void {
-    const act1Flags = ['lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight', 'bag_dropped', 'ellis_done'];
+    const act1Flags = [
+      'lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight',
+      'bag_dropped', 'shed_seen', 'has_logs', 'logs_dropped', 'ellis_done', 'ellisB_done',
+      'unpacked', 'sleep_try1', 'checked_thump',
+    ];
     const act2Flags = ['act2', 'clue_guestbook', 'clue_backroom', 'clue_toothbrush', 'warm_noticed', 'boxes_moved', 'clue_duffel', 'mug_rinsed', 'leave_early', 'keys_gone', 'act2_done'];
     const act3Flags = ['act3', 'chair_moved', 'pantry_ajar', 'call_answered', 'power_out', 'hatch_open', 'act3_done'];
     const act1Msgs: Msg[] = [
       { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
       { from: 'ellis', text: 'wasn’t me. haven’t been out there in a week' },
       { from: 'ellis', text: 'cleaner mustve left it. enjoy your stay' },
+      { from: 'sam', text: 'quick q — the wood stove was already lit when i got in. cleaner does that too?', status: 'delivered' },
+      { from: 'ellis', text: '…the cleaner doesn’t light fires' },
+      { from: 'ellis', text: 'old embers mustve caught. happens with these stoves' },
+      { from: 'ellis', text: 'anyway. sleep well' },
+      { from: 'ellis', text: 'forgot to say — if you hear scratching at night it’s raccoons. they get under the porch' },
     ];
     const act2Msgs: Msg[] = [
       { from: 'sam', text: 'hey weird q, does anyone else stay at cedar hollow between guests? found some clothes and stuff', status: 'delivered' },

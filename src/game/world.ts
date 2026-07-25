@@ -668,10 +668,10 @@ export function drawBathroom(ctx: Ctx2D, g: Game): void {
   ctx.fillRect(298, 384, 5, 12);
   ctx.fillRect(298, 384, 14, 4);
 
-  // the cup: one toothbrush on arrival, two in the morning
+  // the cup: one toothbrush once Sam unpacks, two in the morning
   ctx.fillStyle = '#232b3f';
   ctx.fillRect(336, 382, 13, 15);
-  if (g.flag('bag_dropped') || day) {
+  if (g.flag('unpacked') || day) {
     ctx.strokeStyle = '#3a6fa8';
     ctx.lineWidth = 2;
     ctx.beginPath();

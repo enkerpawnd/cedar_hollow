@@ -4,8 +4,32 @@ import { actThree } from './act3';
 import type { Game } from './game';
 import type { Co } from './types';
 
-// ACT TWO — the house is wrong. Daylight, four clues, the midpoint text,
-// and the empty key hook.
+// Everything wrong with the house, findable in any order.
+const CLUES = [
+  'clue_guestbook', 'clue_backroom', 'clue_toothbrush', 'clue_duffel',
+  'clue_shed', 'clue_camp', 'clue_prints',
+];
+
+function clueCount(g: Game): number {
+  return CLUES.filter((f) => g.flag(f)).length;
+}
+
+// Keeps the hint honest while the player sweeps the property.
+function* clueHints(g: Game): Co {
+  let last = -1;
+  while (!g.flag('ellis2_started') && !g.flag('act2_done')) {
+    const n = clueCount(g);
+    if (n !== last) {
+      last = n;
+      if (n === 0) g.hint('something is off — look around, inside and out');
+      else g.hint(`something is wrong with this place — keep looking (${n})`);
+    }
+    yield 0.4;
+  }
+}
+
+// ACT TWO — the house is wrong. Daylight, seven clues, the midpoint texts,
+// packing, and the empty key hook.
 export function* actTwo(g: Game): Co {
   saveCheckpoint('act2');
   g.setFlag('act2');
@@ -26,6 +50,11 @@ export function* actTwo(g: Game): Co {
       g.run(delayedSay(g, 1.4, 'It’s warm in here.'));
       g.run(delayedSay(g, 5.0, 'The stove is at the other end of the cabin. And it’s dead.'));
     }
+    if (id === 'exterior' && !g.flag('a2_outside')) {
+      g.setFlag('a2_outside');
+      g.run(delayedSay(g, 1.2, 'Grey morning. The lake’s down that path somewhere.'));
+      g.run(delayedSay(g, 4.8, 'Daylight makes everything look ordinary. Almost.'));
+    }
   };
 
   yield 1.0;
@@ -34,10 +63,22 @@ export function* actTwo(g: Game): Co {
   g.cutscene = false;
   g.say('Morning. Grey out. The quiet held up its end.');
   yield 4.0;
-  g.hint('look around the cabin');
+  g.run(clueHints(g));
 
-  // the pantry duffel is the clue that breaks the denial
-  yield waitFlag(g, 'clue_duffel');
+  // milestone reactions as the picture assembles
+  yield () => clueCount(g) >= 2;
+  yield 1.2;
+  g.say('Two things. Two things is a coincidence.');
+
+  yield () => clueCount(g) >= 3;
+  yield 3.0;
+  g.phone.receive('hows the stay going? quiet enough for you?', g);
+  yield 4.2;
+  g.say('I haven’t texted him since last night. Why’s he checking in now?');
+
+  // the duffel plus enough of the rest breaks the denial
+  yield () => g.flag('clue_duffel') && clueCount(g) >= 5;
+  g.setFlag('ellis2_started');
   yield 2.5;
   g.hint('text Ellis — TAB');
   g.phone.draft = {
@@ -58,6 +99,28 @@ export function* actTwo(g: Game): Co {
         g.phone.receive('why, is someone there?', g);
         // let that question sit on the screen
         yield 6.0;
+        g.setFlag('ellis2_mid');
+      }());
+    },
+  };
+
+  yield waitFlag(g, 'ellis2_mid');
+  yield 2.0;
+  g.hint('answer him — TAB');
+  g.phone.draft = {
+    text: 'probably nothing. theres a duffel in the pantry with a printout of MY booking dates in it',
+    onSent: (m) => {
+      g.run(function* (): Co {
+        yield 3.0;
+        m.status = 'delivered';
+        // the longest pause yet
+        yield 8.5;
+        g.phone.receive('thats the cleaners husbands. he does repairs, leaves gear around', g);
+        yield 4.5;
+        g.phone.receive('the printout is probably her checklist', g);
+        yield 5.5;
+        g.phone.receive('you booked through sunday right?', g);
+        yield 5.5;
         g.setFlag('ellis2_done');
       }());
     },
@@ -65,11 +128,19 @@ export function* actTwo(g: Game): Co {
 
   yield waitFlag(g, 'ellis2_done');
   yield 1.5;
-  g.say('Okay. New plan.');
-  yield 3.0;
-  g.say('I can be packed in ten minutes. It’s not leaving early, it’s beating traffic.');
+  g.say('“You booked through Sunday, right.”');
+  yield 3.6;
+  g.say('Why does that feel like a question about the house’s schedule and not mine?');
+  yield 4.2;
+  g.say('Okay. New plan. Packed in ten minutes — it’s not leaving early, it’s beating traffic.');
   g.setFlag('leave_early');
-  yield 2.0;
+  yield 2.4;
+  g.hint('pack — bag, charger, toothbrush');
+
+  yield () => g.flag('packed_bag') && g.flag('packed_charger') && g.flag('packed_toothbrush');
+  yield 1.2;
+  g.say('Everything I own in one bag. Again.');
+  yield 2.2;
   g.hint('grab the car keys from the hook by the door');
 
   // the key hook interactable cuts to black and raises act2_done

@@ -94,7 +94,14 @@ export class Game {
       'bag_dropped', 'shed_seen', 'has_logs', 'logs_dropped', 'ellis_done', 'ellisB_done',
       'unpacked', 'sleep_try1', 'checked_thump',
     ];
-    const act2Flags = ['act2', 'clue_guestbook', 'clue_backroom', 'clue_toothbrush', 'warm_noticed', 'boxes_moved', 'clue_duffel', 'mug_rinsed', 'leave_early', 'keys_gone', 'act2_done'];
+    const act2Flags = [
+      'act2', 'a2_outside', 'warm_noticed', 'boxes_moved', 'mug_rinsed',
+      'clue_guestbook', 'clue_backroom', 'clue_toothbrush', 'clue_duffel',
+      'clue_shed', 'clue_camp', 'clue_prints',
+      'ellis2_started', 'ellis2_mid', 'ellis2_done',
+      'leave_early', 'packed_bag', 'packed_charger', 'packed_toothbrush',
+      'keys_gone', 'act2_done',
+    ];
     const act3Flags = ['act3', 'chair_moved', 'pantry_ajar', 'call_answered', 'power_out', 'hatch_open', 'act3_done'];
     const act1Msgs: Msg[] = [
       { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
@@ -107,9 +114,14 @@ export class Game {
       { from: 'ellis', text: 'forgot to say — if you hear scratching at night it’s raccoons. they get under the porch' },
     ];
     const act2Msgs: Msg[] = [
+      { from: 'ellis', text: 'hows the stay going? quiet enough for you?' },
       { from: 'sam', text: 'hey weird q, does anyone else stay at cedar hollow between guests? found some clothes and stuff', status: 'delivered' },
       { from: 'ellis', text: 'no. just you this weekend' },
       { from: 'ellis', text: 'why, is someone there?' },
+      { from: 'sam', text: 'probably nothing. theres a duffel in the pantry with a printout of MY booking dates in it', status: 'delivered' },
+      { from: 'ellis', text: 'thats the cleaners husbands. he does repairs, leaves gear around' },
+      { from: 'ellis', text: 'the printout is probably her checklist' },
+      { from: 'ellis', text: 'you booked through sunday right?' },
     ];
     const act3Msgs: Msg[] = [
       { from: 'ellis', text: 'i called the sheriff. stay in a locked room. do NOT go in the crawlspace' },

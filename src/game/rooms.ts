@@ -165,6 +165,22 @@ export function buildRooms(): Record<string, Room> {
           g.gotoRoom('main', 110);
         },
       },
+      {
+        id: 'footprints', x: 985, y: 440, label: 'the ground',
+        enabled: (g) => g.isDay(),
+        use(g) {
+          if (!g.flag('clue_prints')) {
+            g.setFlag('clue_prints');
+            g.remark(
+              'Boot prints in the mud under the window. Deep.',
+              'Standing prints, not walking ones. Two feet, planted.',
+              'They face the glass.',
+            );
+          } else {
+            g.remark('They face the glass.');
+          }
+        },
+      },
     ],
   };
 
@@ -193,6 +209,8 @@ export function buildRooms(): Record<string, Room> {
             g.remark('My keys. Right where I can’t forget them.');
           } else if (!g.flag('leave_early')) {
             g.remark('Hm. Thought I hung my keys there.');
+          } else if (!(g.flag('packed_bag') && g.flag('packed_charger') && g.flag('packed_toothbrush'))) {
+            g.remark('Pack first. Then keys, car, gone.');
           } else if (!g.flag('keys_gone')) {
             g.setFlag('keys_gone');
             g.run(keysGone(g));
@@ -385,10 +403,25 @@ export function buildRooms(): Record<string, Room> {
         },
       },
       {
+        id: 'bag', x: 331, y: 430, label: 'your bag',
+        enabled: (g) => g.flag('bag_dropped') && g.flag('leave_early') && !g.flag('packed_bag') && !g.flag('act3'),
+        use(g) {
+          g.setFlag('packed_bag');
+          g.sound.play('pickup', { vol: 0.45 });
+          g.remark('Clothes shoved in. Folding is for people with time.');
+        },
+      },
+      {
         id: 'nightstand', x: 610, y: 400, label: 'nightstand',
         enabled: always,
         use(g) {
-          g.remark('A lamp, a drawer, a bible with a soft spine.');
+          if (g.isDay() && g.flag('leave_early') && !g.flag('packed_charger')) {
+            g.setFlag('packed_charger');
+            g.sound.play('pickup', { vol: 0.4 });
+            g.remark('Charger. The phone stays alive. The phone is the plan.');
+          } else {
+            g.remark('A lamp, a drawer, a bible with a soft spine.');
+          }
         },
       },
       {
@@ -505,6 +538,10 @@ export function buildRooms(): Record<string, Room> {
           } else if (!g.flag('clue_toothbrush')) {
             g.setFlag('clue_toothbrush');
             g.remark('Two toothbrushes in the cup.', 'Mine’s the blue one.', 'The other one is wet.');
+          } else if (g.flag('leave_early') && !g.flag('packed_toothbrush') && !g.flag('act3')) {
+            g.setFlag('packed_toothbrush');
+            g.sound.play('pickup', { vol: 0.4 });
+            g.remark('Mine. Just mine.', 'The wet one stays. For the sheriff, or whoever.');
           } else {
             g.remark('The other one is wet.');
           }
@@ -592,6 +629,22 @@ export function buildRooms(): Record<string, Room> {
         'One outline is empty. Something with a short handle and a heavy head.',
         320,
       ),
+      {
+        id: 'tallies', x: 250, y: 435, radius: 48, label: 'marks on the wall',
+        enabled: always,
+        use(g) {
+          if (!g.flag('clue_shed')) {
+            g.setFlag('clue_shed');
+            g.remark(
+              'Scratches, low on the wall. Knee height. Groups of five.',
+              'Fourteen groups. Fifteen. I keep losing count.',
+              'Somebody sat on this floor and counted days.',
+            );
+          } else {
+            g.remark('Counting days. In a shed that isn’t theirs.');
+          }
+        },
+      },
       examine(
         'bench', 385, 'workbench',
         'Wood shavings, fresh enough to smell. A vise, wiped clean.',
@@ -623,6 +676,23 @@ export function buildRooms(): Record<string, Room> {
         'Flat. Cold. Honest, at least.',
         420,
       ),
+      {
+        id: 'campsite', x: 690, y: 425, radius: 95, label: 'camp',
+        enabled: always,
+        use(g) {
+          if (!g.flag('clue_camp')) {
+            g.setFlag('clue_camp');
+            g.remark(
+              'A fire ring. The ash is packed down — used a lot, and not long ago.',
+              'A camp chair. Cigarette ends in the dirt beside it.',
+              'The chair doesn’t face the water.',
+              'It faces the cabin.',
+            );
+          } else {
+            g.remark('Best view of the house on the whole property.');
+          }
+        },
+      },
     ],
   };
 

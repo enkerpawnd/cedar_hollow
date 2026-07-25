@@ -102,7 +102,12 @@ export class Game {
       'leave_early', 'packed_bag', 'packed_charger', 'packed_toothbrush',
       'keys_gone', 'act2_done',
     ];
-    const act3Flags = ['act3', 'chair_moved', 'pantry_ajar', 'call_answered', 'power_out', 'hatch_open', 'act3_done'];
+    const act3Flags = [
+      'act3', 'srch_sofa', 'srch_drawer', 'srch_bed', 'srch_nightstand', 'srch_car',
+      'a3_finale', 'chair_moved', 'pantry_ajar', 'beat_guestbook', 'beat_brush_gone',
+      'call_answered', 'ellis3_mid', 'ellis3_done', 'choice_open',
+      'power_out', 'hatch_open', 'act3_done',
+    ];
     const act1Msgs: Msg[] = [
       { from: 'sam', text: 'hey just got in, thanks for leaving the heat on', status: 'delivered' },
       { from: 'ellis', text: 'wasn’t me. haven’t been out there in a week' },
@@ -124,9 +129,15 @@ export class Game {
       { from: 'ellis', text: 'you booked through sunday right?' },
     ];
     const act3Msgs: Msg[] = [
+      { from: 'sam', text: 'someone just called and breathed into the phone. what is going on out there', status: 'delivered' },
+      { from: 'ellis', text: 'ok. i need you to stay calm' },
+      { from: 'ellis', text: 'my dad used to let a man winter at the cabin. a handyman. an arrangement' },
+      { from: 'ellis', text: 'i ended it when i took over. changed the locks. he kept coming back' },
+      { from: 'ellis', text: 'he doesnt break in. he waits for the bookings to end. the cleaner found bedding under the house in march' },
+      { from: 'sam', text: 'UNDER THE HOUSE??', status: 'delivered' },
       { from: 'ellis', text: 'i called the sheriff. stay in a locked room. do NOT go in the crawlspace' },
-      { from: 'ellis', text: 'he lives out there. between bookings. we’ve had complaints' },
-      { from: 'ellis', text: 'i’m 40 min out. lock the door' },
+      { from: 'ellis', text: 'he lives out there sam. between bookings. im 40 min away' },
+      { from: 'ellis', text: 'lock the door' },
     ];
     if (cp === 'act4' || cp === 'act4b') {
       for (const f of [...act1Flags, ...act2Flags, ...act3Flags]) this.flags.add(f);

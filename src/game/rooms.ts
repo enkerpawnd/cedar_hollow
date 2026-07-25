@@ -84,7 +84,16 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (g.flag('act3')) {
-            g.remark('Locked. Doing its one job at the worst possible time.');
+            if (!g.flag('srch_car')) {
+              g.setFlag('srch_car');
+              g.remark(
+                'Locked, obviously. It locks itself. Smart car, useless owner.',
+                'And no — the spare-key-in-the-bumper thing is a movie thing.',
+                'The keys went INTO the house. Somebody carried them in.',
+              );
+            } else {
+              g.remark('Locked. Doing its one job at the worst possible time.');
+            }
           } else if (g.flag('act2')) {
             g.remark('Still here. At least the car waited.');
           } else if (!g.flag('entered')) {
@@ -271,9 +280,19 @@ export function buildRooms(): Record<string, Room> {
       },
       {
         id: 'sofa', x: 345, y: 380, label: 'sofa',
-        enabled: (g) => g.flag('choice_open') && !g.flag('chose_search') && !g.flag('chose_barricade'),
+        enabled: (g) => g.flag('act3') && !g.flag('chose_search') && !g.flag('chose_barricade') && !g.flag('act4'),
         use(g) {
-          g.run(barricadeCo(g));
+          if (g.flag('choice_open')) {
+            g.run(barricadeCo(g));
+          } else if (!g.flag('srch_sofa')) {
+            g.setFlag('srch_sofa');
+            g.remark(
+              'Cushions up. Coins, crumbs, a pen that isn’t mine.',
+              'And my jacket — every pocket, twice. Receipts and a lighter.',
+            );
+          } else {
+            g.remark('The cushions have given all they have to give.');
+          }
         },
       },
       {
@@ -298,6 +317,8 @@ export function buildRooms(): Record<string, Room> {
         use(g) {
           if (!g.flag('act2')) {
             g.remark('Guestbook. I’ll sign it on the way out.');
+          } else if (g.flag('beat_guestbook')) {
+            g.remark('Today’s date. “sam.” No capital.', 'I’m in the book now.');
           } else if (!g.flag('clue_guestbook')) {
             g.setFlag('clue_guestbook');
             g.remark(
@@ -330,7 +351,10 @@ export function buildRooms(): Record<string, Room> {
         id: 'drawer', x: 794, y: 400, label: 'kitchen drawer',
         enabled: always,
         use(g) {
-          if (g.flag('bulb_popped') && !g.flag('has_flashlight')) {
+          if (g.flag('act3') && !g.flag('srch_drawer')) {
+            g.setFlag('srch_drawer');
+            g.remark('Junk drawer, emptied onto the counter.', 'Rubber bands don’t start cars.');
+          } else if (g.flag('bulb_popped') && !g.flag('has_flashlight')) {
             g.setFlag('has_flashlight');
             g.sound.play('pickup', { vol: 0.5 });
             g.remark('Flashlight. Batteries work. Good.', 'F to switch it on.');
@@ -377,7 +401,16 @@ export function buildRooms(): Record<string, Room> {
           if (g.flag('act4')) {
             g.remark('No time. No chance.');
           } else if (g.flag('act3')) {
-            g.remark('Not even as a joke.');
+            if (!g.flag('srch_bed')) {
+              g.setFlag('srch_bed');
+              g.remark(
+                'On my knees, phone light under the bed.',
+                'Dust. One sock. Not my sock.',
+                'Not thinking about the sock.',
+              );
+            } else {
+              g.remark('Still no keys under there. Still one sock.');
+            }
           } else if (g.flag('act2')) {
             g.remark(g.flag('leave_early') ? 'No. I’m done sleeping in this house.' : 'I just got up.');
           } else if (!g.flag('bag_dropped')) {
@@ -419,6 +452,9 @@ export function buildRooms(): Record<string, Room> {
             g.setFlag('packed_charger');
             g.sound.play('pickup', { vol: 0.4 });
             g.remark('Charger. The phone stays alive. The phone is the plan.');
+          } else if (g.flag('act3') && !g.flag('srch_nightstand')) {
+            g.setFlag('srch_nightstand');
+            g.remark('Drawer out, turned over on the bed.', 'A bible and a dead moth. No keys.');
           } else {
             g.remark('A lamp, a drawer, a bible with a soft spine.');
           }
@@ -534,6 +570,13 @@ export function buildRooms(): Record<string, Room> {
               g.remark('Brushed, washed. The blue one goes in the cup.', 'There. Moved in.');
             } else {
               g.remark('Rough drive. I look it.');
+            }
+          } else if (g.flag('act3')) {
+            if (!g.flag('beat_brush_gone')) {
+              g.setFlag('beat_brush_gone');
+              g.remark('The cup is empty. Mine’s packed. His is…', 'His is gone too. He’s tidying up.');
+            } else {
+              g.remark('He’s tidying up.');
             }
           } else if (!g.flag('clue_toothbrush')) {
             g.setFlag('clue_toothbrush');

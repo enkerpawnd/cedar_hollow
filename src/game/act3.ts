@@ -4,6 +4,25 @@ import { actFour } from './act4';
 import type { Game } from './game';
 import type { Co } from './types';
 
+// Everywhere the keys could plausibly be. They're in none of them.
+const SEARCHES = ['srch_sofa', 'srch_drawer', 'srch_bed', 'srch_nightstand', 'srch_car'];
+
+export function searchCount(g: Game): number {
+  return SEARCHES.filter((f) => g.flag(f)).length;
+}
+
+function* searchHints(g: Game): Co {
+  let last = -1;
+  while (!g.flag('a3_finale')) {
+    const n = searchCount(g);
+    if (n !== last) {
+      last = n;
+      g.hint(n === 0 ? 'the keys — tear the place apart' : `the keys — keep tearing (${n}/5)`);
+    }
+    yield 0.4;
+  }
+}
+
 // Shared beat: the lights cut out and the hatch is suddenly a fact.
 function* powerDies(g: Game): Co {
   yield 0.4;
@@ -96,8 +115,8 @@ export function* hatchReveal(g: Game): Co {
   g.setFlag('act3_done');
 }
 
-// ACT THREE — contact. The house answers back, the call breathes, Ellis
-// finally tells the truth by text, and the player picks their act four.
+// ACT THREE — contact. A playable search for the keys, the house answering
+// back while your back is turned, the call, and the truth by text.
 export function* actThree(g: Game): Co {
   saveCheckpoint('act3');
   g.setFlag('act3');
@@ -112,15 +131,14 @@ export function* actThree(g: Game): Co {
   g.setAmbience();
 
   // the house changes only while you're in another room
-  let mainVisits = 0;
   g.onRoomEnter = (id) => {
     if (id === 'main') {
-      mainVisits++;
-      if (mainVisits === 1 && !g.flag('chair_moved')) {
+      const n = searchCount(g);
+      if (n >= 2 && !g.flag('chair_moved')) {
         g.setFlag('chair_moved');
         g.run(delayedSay(g, 1.2, 'The chair’s pulled out.'));
         g.run(delayedSay(g, 4.6, 'I push chairs in. It’s a whole thing. I didn’t leave it like that.'));
-      } else if (mainVisits === 2 && !g.flag('pantry_ajar')) {
+      } else if (n >= 3 && g.flag('chair_moved') && !g.flag('pantry_ajar')) {
         g.setFlag('pantry_ajar');
         g.run(delayedSay(g, 1.2, 'The pantry door is open.'));
         g.run(delayedSay(g, 4.2, 'I closed it. I know I closed it.'));
@@ -136,14 +154,42 @@ export function* actThree(g: Game): Co {
   g.fadeToBlack(0, 2.6);
   yield 3.0;
   g.cutscene = false;
-  g.say('Dark already. I spent the whole afternoon tearing this place apart for the keys.');
-  yield 5.2;
+  g.say('Dark already. And the keys are still just… not.');
+  yield 4.6;
   g.say('They’re not lost. Lost is when you did it.');
   yield 2.0;
-  g.hint('keep searching the cabin');
+  g.run(searchHints(g));
 
-  yield () => g.flag('chair_moved') && g.flag('pantry_ajar');
-  yield 6.0;
+  // five empty hiding places later, the house has run out of excuses
+  yield () => searchCount(g) >= 5;
+  g.setFlag('a3_finale');
+  g.hint('');
+  yield 1.5;
+  g.say('Five places keys live. Zero keys.');
+  yield 3.5;
+  yield () => g.room.id === 'main' && !g.cutscene;
+
+  // mop up any beat the player's route skipped, then the guestbook
+  if (!g.flag('chair_moved')) {
+    g.setFlag('chair_moved');
+    g.say('The chair’s pulled out. I didn’t leave it like that.');
+    yield 5.0;
+  }
+  if (!g.flag('pantry_ajar')) {
+    g.setFlag('pantry_ajar');
+    g.say('And the pantry door is open. I closed it. I know I closed it.');
+    yield 5.0;
+  }
+  yield 1.5;
+  g.setFlag('beat_guestbook');
+  g.say('The guestbook is open. I left it closed.');
+  yield 4.2;
+  g.say('There’s a new line under Dana and Mike. Today’s date.');
+  yield 4.4;
+  g.say('One word. “sam.” No capital.');
+  yield 3.6;
+  g.say('Like a note to self.');
+  yield 4.5;
 
   // the call
   g.phone.startCall(g);
@@ -154,18 +200,58 @@ export function* actThree(g: Game): Co {
   g.say('Hello?');
   yield 1.8;
   g.sound.play('breath', { vol: 0.55 });
-  yield 5.8;
+  yield 3.4;
+  g.sound.play('breath', { vol: 0.4 });
+  yield 3.0;
   g.phone.endCall(g);
   yield 1.0;
   g.say('Breathing. That was breathing.');
-  yield 3.2;
+  yield 3.0;
+  g.say('Whoever it was didn’t want anything. They just wanted me to hear it.');
+  yield 3.6;
 
-  // the reveal lands as text, cold and specific
-  g.phone.receive('i called the sheriff. stay in a locked room. do NOT go in the crawlspace', g);
-  yield 3.8;
-  g.phone.receive('he lives out there. between bookings. we’ve had complaints', g);
-  yield 4.0;
-  g.phone.receive('i’m 40 min out. lock the door', g);
+  // Sam pushes; Ellis finally opens the whole ugly file
+  g.hint('text Ellis — TAB');
+  g.phone.draft = {
+    text: 'someone just called and breathed into the phone. what is going on out there',
+    onSent: (m) => {
+      g.run(function* (): Co {
+        yield 3.0;
+        m.status = 'delivered';
+        yield 6.0;
+        g.phone.receive('ok. i need you to stay calm', g);
+        yield 4.2;
+        g.phone.receive('my dad used to let a man winter at the cabin. a handyman. an arrangement', g);
+        yield 5.2;
+        g.phone.receive('i ended it when i took over. changed the locks. he kept coming back', g);
+        yield 5.2;
+        g.phone.receive('he doesnt break in. he waits for the bookings to end. the cleaner found bedding under the house in march', g);
+        yield 6.0;
+        g.setFlag('ellis3_mid');
+      }());
+    },
+  };
+  yield waitFlag(g, 'ellis3_mid');
+  yield 1.5;
+  g.hint('answer — TAB');
+  g.phone.draft = {
+    text: 'UNDER THE HOUSE??',
+    onSent: (m) => {
+      g.run(function* (): Co {
+        yield 2.5;
+        m.status = 'delivered';
+        yield 5.0;
+        g.phone.receive('i called the sheriff. stay in a locked room. do NOT go in the crawlspace', g);
+        yield 4.0;
+        g.phone.receive('he lives out there sam. between bookings. im 40 min away', g);
+        yield 3.6;
+        g.phone.receive('lock the door', g);
+        yield 2.2;
+        g.setFlag('ellis3_done');
+      }());
+    },
+  };
+  yield waitFlag(g, 'ellis3_done');
   yield 2.2;
   g.hint('barricade the door — or go back for those keys');
   g.setFlag('choice_open');

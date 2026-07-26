@@ -356,6 +356,22 @@ export function drawExterior(ctx: Ctx2D, g: Game): void {
     ctx.fillRect(1168, 425, 7, 31);
     ctx.fillRect(1177, 425, 7, 31);
   }
+  if (g.flag('tenant_yard')) {
+    // he stopped chasing the moment the engine caught. mid-yard, headlit,
+    // just watching the car leave.
+    ctx.fillStyle = '#040508';
+    ctx.beginPath();
+    ctx.roundRect(679, 363, 22, 64, 8);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(690, 355, 8.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(682, 425, 7, 45);
+    ctx.fillRect(691, 425, 7, 45);
+    // the rim the headlights carve out of him
+    ctx.fillStyle = 'rgba(235,230,210,0.12)';
+    ctx.fillRect(675, 350, 4, 118);
+  }
 }
 
 // --- Main room: stove, kitchen, doors to bedroom and the back room ---

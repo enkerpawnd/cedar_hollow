@@ -9,7 +9,7 @@ import { buildRooms } from './rooms';
 import { actOne } from './act1';
 import { actTwo } from './act2';
 import { actThree } from './act3';
-import { actFour, tenantTick, tenantDraw, overlaysDraw } from './act4';
+import { actFour, tenantTick, tenantDraw, overlaysDraw, tenantNoise } from './act4';
 import { loadCheckpoint, clearSave, CHECKPOINT_LABELS, type Checkpoint } from './save';
 import type { Co, Ctx2D, Interactable, Room } from './types';
 
@@ -306,10 +306,17 @@ export class Game {
     if (this.flag('act4')) tenantTick(this, dt);
 
     if (!this.cutscene) {
-      if (pressed('tab', 'p') && !this.phone.call) this.phone.toggle(this);
+      if (pressed('tab', 'p') && !this.phone.call) {
+        this.phone.toggle(this);
+        // in the final act, the click of the phone is a noise like any other
+        if (this.flag('act4')) tenantNoise(this, this.room.id, this.player.x);
+      }
       if (this.phone.open) {
         if (this.phone.call?.phase === 'ringing' && pressed('e', 'enter')) this.phone.answer(this);
-        else if (pressed('e', 'enter') && this.phone.draft && !this.phone.call) this.phone.send(this);
+        else if (pressed('e', 'enter') && this.phone.draft && !this.phone.call) {
+          this.phone.send(this);
+          if (this.flag('act4')) tenantNoise(this, this.room.id, this.player.x);
+        }
         if (pressed('escape') && !this.phone.call) this.phone.open = false;
       } else {
         if (pressed('f') && this.flag('has_flashlight')) {

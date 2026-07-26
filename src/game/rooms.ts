@@ -1,7 +1,7 @@
 import { drawExterior, drawMain, drawBedroom, drawBackroom, drawBathroom, drawPantry, drawShed, drawLake, drawCrawl } from './world';
 import { falseStartCo } from './act1';
 import { barricadeCo, searchCo } from './act3';
-import { endingA, unbarricadeCo } from './act4';
+import { endingA, tenantAt, tenantSawHide, duffelGoneCo, enterCrawlCo, exitCrawlCo, crawlKeysCo, ventKickCo } from './act4';
 import type { Game } from './game';
 import type { Co, Interactable, Room } from './types';
 
@@ -83,7 +83,10 @@ export function buildRooms(): Record<string, Room> {
         id: 'car', x: 195, y: 380, label: 'your car',
         enabled: always,
         use(g) {
-          if (g.flag('act3')) {
+          if (g.flag('act4')) {
+            if (g.flag('has_keys')) g.run(endingA(g));
+            else g.remark('Locked. And my keys are under a house.');
+          } else if (g.flag('act3')) {
             if (!g.flag('srch_car')) {
               g.setFlag('srch_car');
               g.remark(
@@ -170,6 +173,10 @@ export function buildRooms(): Record<string, Room> {
         id: 'front_door', x: 1176, y: 330, label: 'front door',
         enabled: (g) => g.flag('lockbox_seen'),
         use(g) {
+          if (g.flag('act4')) {
+            g.remark('No. The car. The car is the whole plan.');
+            return;
+          }
           g.setFlag('entered');
           g.gotoRoom('main', 110);
         },
@@ -231,9 +238,8 @@ export function buildRooms(): Record<string, Room> {
         enabled: always,
         use(g) {
           if (g.flag('act4')) {
-            if (g.flag('barricaded')) g.run(unbarricadeCo(g));
-            else if (g.flag('has_keys')) g.run(endingA(g));
-            else g.remark('Not on foot. Not into those trees. Keys.');
+            if (g.flag('barricaded')) g.remark('The sofa. And even shoved clear — no keys, no car, no chance on foot.');
+            else g.remark('Not on foot. Not into those trees. Keys first.');
           } else if (g.flag('choice_open') || g.flag('chose_barricade') || g.flag('chose_search')) {
             g.remark(g.flag('barricaded') ? 'The sofa stays where it is.' : 'Not out there. Not now.');
           } else if (g.flag('leave_early') && g.flag('keys_gone')) {
@@ -473,8 +479,9 @@ export function buildRooms(): Record<string, Room> {
             g.player.hidden = true;
             g.player.x = 720;
             g.player.flashOn = false;
-            g.setFlag('player_hidden');
             g.sound.play('switch', { vol: 0.3 });
+            // if he watched you fold yourself in there, it isn't hiding
+            tenantSawHide(g);
           } else {
             g.player.hidden = false;
             g.sound.play('switch', { vol: 0.3 });
@@ -542,7 +549,12 @@ export function buildRooms(): Record<string, Room> {
         id: 'hatch', x: 324, y: 445, label: 'crawlspace hatch',
         enabled: (g) => g.flag('hatch_open'),
         use(g) {
-          g.remark('Ellis said do not go in the crawlspace.', 'For once, Ellis and I want the same thing.');
+          if (g.flag('act4')) {
+            if (g.flag('duffel_gone_seen') || g.flag('chose_barricade')) g.run(enterCrawlCo(g));
+            else g.remark('Down there is last-resort territory. The duffel first.');
+          } else {
+            g.remark('Ellis said do not go in the crawlspace.', 'For once, Ellis and I want the same thing.');
+          }
         },
       },
     ],
@@ -618,18 +630,17 @@ export function buildRooms(): Record<string, Room> {
         },
       },
       {
-        id: 'duffel', x: 330, y: 400, label: 'duffel bag',
-        enabled: (g) => g.flag('boxes_moved'),
+        id: 'duffel_gone', x: 330, y: 420, label: 'where the duffel was',
+        enabled: (g) => g.flag('boxes_moved') && g.flag('act4'),
         use(g) {
-          if (g.flag('act4')) {
-            if (!g.flag('has_keys')) {
-              g.setFlag('has_keys');
-              g.sound.play('pickup', { vol: 0.5 });
-              g.remark(g.flag('knows_keys') ? 'Side pocket. Keys. Go.' : 'His bag— keys. My keys. Go.');
-            } else {
-              g.remark('Go. Go, go.');
-            }
-          } else if (g.flag('choice_open') && !g.flag('chose_barricade') && !g.flag('act3_done')) {
+          g.run(duffelGoneCo(g));
+        },
+      },
+      {
+        id: 'duffel', x: 330, y: 400, label: 'duffel bag',
+        enabled: (g) => g.flag('boxes_moved') && !g.flag('act4'),
+        use(g) {
+          if (g.flag('choice_open') && !g.flag('chose_barricade') && !g.flag('act3_done')) {
             if (!g.flag('chose_search')) {
               g.setFlag('chose_search');
               g.run(searchCo(g));
@@ -748,7 +759,64 @@ export function buildRooms(): Record<string, Room> {
       { x: 1015, y: 400, r: 150, strength: 0.3, on: (g) => g.flag('hatch_open') && !g.flag('hatch_blocked') },
       { x: 57, y: 442, r: 90, strength: 0.25, on: (g) => g.flag('vent_open') },
     ],
-    items: [],
+    items: [
+      {
+        id: 'crawl_vent', x: 60, y: 415, label: 'vent panel',
+        enabled: (g) => !g.flag('vent_open'),
+        use(g) {
+          if (g.flag('has_keys')) g.run(ventKickCo(g));
+          else g.remark('Kicked loose once before, by the look of the frame.', 'An exit. If it comes to that.');
+        },
+      },
+      {
+        id: 'nest', x: 655, y: 430, label: 'his bed',
+        enabled: always,
+        use(g) {
+          if (!g.flag('nest_seen')) {
+            g.setFlag('nest_seen');
+            g.remark(
+              'A sleeping bag gone shiny with use. Cans, stacked neat. A water jug.',
+              'He doesn’t camp down here.',
+              'He lives down here. Between guests, he just… waits under the floor.',
+            );
+          } else {
+            g.remark('He lives down here.');
+          }
+        },
+      },
+      {
+        id: 'papers', x: 748, y: 412, label: 'the papers',
+        enabled: always,
+        use(g) {
+          if (!g.flag('papers_seen')) {
+            g.setFlag('papers_seen');
+            g.remark(
+              'Booking printouts, pinned in rows. Months of them. Mine is on top.',
+              'Notes in the margins. “quiet.” “leaves food out.” “stays in mornings.”',
+              'One from last spring: “nice. talked to me through the door.”',
+              'I’m not a guest to him. I’m the schedule.',
+            );
+          } else {
+            g.remark('“stays in mornings.”');
+          }
+        },
+      },
+      {
+        id: 'crawl_duffel', x: 880, y: 430, label: 'his duffel',
+        enabled: (g) => !g.flag('has_keys'),
+        use(g) {
+          g.run(crawlKeysCo(g));
+        },
+      },
+      {
+        id: 'crawl_up', x: 1015, y: 412, label: 'the hatch above',
+        enabled: (g) => !g.flag('has_keys') && !g.flag('crawl_still') && !g.flag('hatch_blocked'),
+        use(g) {
+          if (tenantAt('backroom')) g.remark('Steps. Right above the hatch. Wait.');
+          else g.run(exitCrawlCo(g));
+        },
+      },
+    ],
   };
 
   return { exterior, main, bedroom, backroom, bathroom, pantry, shed, lake, crawl };

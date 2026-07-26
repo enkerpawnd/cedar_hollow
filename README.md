@@ -71,15 +71,22 @@ booking printouts with notes in the margins, to the keys — and the loudest
 zipper in the world. Hold still while his legs hang through the hatch, then
 he drops in after you, and the crawl-chase runs for the loose vent panel,
 out under the porch, and across the yard to the car. The barricade branch
-instead is four-plus minutes of cat-and-mouse on a schedule — status texts
-from the road (answering one is a noise), a listening freeze, him waiting
-by the hatch — until the red-and-blues, unless you go for the keys anyway.
+instead is cat-and-mouse on a schedule: Ellis texts rescue updates from
+the road (answering one is a noise) — and then the promise collapses.
+"theres a wreck on the rt 9 bridge. could be an hour." He said forty
+minutes, forty minutes ago. Nobody is coming unless Sam makes them come:
+she dials 911 herself on one bar, gets half a sentence out before the
+signal dies — and seconds later Ellis texts "who were you talking to."
+Nobody was supposed to be able to hear her voice. Hold the line from
+there, or go for the keys anyway.
 
 **Endings.** *Drive:* the engine stalls once, catches twice; the headlights
 find him standing still — in the doorway, or mid-yard where he stopped
 chasing the moment the engine caught. Two miles later the last two texts
-load. *Wait* (barricade branch): hold out for the knock — the crawlspace
-is empty and the sleeping bag is still warm. *Caught:* the flashlight
+load. *Wait* (barricade branch): the sheriff comes on Sam's own broken
+911 call, not the one "Ellis" claimed to make — the crawlspace is empty,
+the sleeping bag is still warm, and nobody named Ellis ever called
+anyone. *Caught:* the flashlight
 drops and rolls, a shadow grows across the beam, and the title card comes
 back with the lit window dark. Being caught restarts the night, not the
 weekend.

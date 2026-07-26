@@ -316,6 +316,10 @@ export class Game {
         else if (pressed('e', 'enter') && this.phone.draft && !this.phone.call) {
           this.phone.send(this);
           if (this.flag('act4')) tenantNoise(this, this.room.id, this.player.x);
+        } else if (pressed('e', 'enter') && this.phone.dial && !this.phone.call) {
+          const d = this.phone.dial;
+          this.phone.dial = null;
+          d.onDial();
         }
         if (pressed('escape') && !this.phone.call) this.phone.open = false;
       } else {

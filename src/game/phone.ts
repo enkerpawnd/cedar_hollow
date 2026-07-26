@@ -32,7 +32,8 @@ export class Phone {
   signal = 1;
   unread = 0;
   draft: { text: string; onSent: (m: Msg) => void } | null = null;
-  call: { phase: 'ringing' | 'active'; t: number } | null = null;
+  dial: { label: string; onDial: () => void } | null = null;
+  call: { phase: 'ringing' | 'dialing' | 'active'; t: number; label: string } | null = null;
   private sigT = 0;
   private ringT = 0;
 
@@ -52,12 +53,25 @@ export class Phone {
           this.ringT = 1.5;
           g.sound.play('buzz', { vol: 0.45 });
         }
+      } else if (this.call.phase === 'dialing') {
+        this.ringT -= dt;
+        if (this.ringT <= 0) {
+          this.ringT = 1.4;
+          g.sound.play('buzz', { vol: 0.15, rate: 1.3 });
+        }
       }
     }
   }
 
   startCall(_g: Game): void {
-    this.call = { phase: 'ringing', t: 0 };
+    this.call = { phase: 'ringing', t: 0, label: 'UNKNOWN NUMBER' };
+    this.ringT = 0;
+    this.open = true;
+  }
+
+  // Sam dials out. One bar and a prayer.
+  startDial(label: string): void {
+    this.call = { phase: 'dialing', t: 0, label };
     this.ringT = 0;
     this.open = true;
   }
@@ -105,7 +119,7 @@ export class Phone {
 
   render(ctx: Ctx2D, g: Game): void {
     if (this.slide < 0.01) {
-      if (this.unread > 0 || this.draft) {
+      if (this.unread > 0 || this.draft || this.dial) {
         const pulse = 0.5 + 0.5 * Math.sin(g.time * 5);
         ctx.fillStyle = `rgba(240,200,120,${0.3 + 0.4 * pulse})`;
         ctx.beginPath();
@@ -114,7 +128,8 @@ export class Phone {
         ctx.fillStyle = 'rgba(200,208,225,0.55)';
         ctx.font = '10px -apple-system, "Segoe UI", sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(this.unread > 0 ? 'TAB — new message' : 'TAB — phone', W - 38, 32);
+        const label = this.unread > 0 ? 'TAB — new message' : this.dial ? 'TAB — 911' : 'TAB — phone';
+        ctx.fillText(label, W - 38, 32);
       }
       return;
     }
@@ -145,7 +160,7 @@ export class Phone {
     ctx.fillStyle = '#d5dce8';
     ctx.font = '600 13px -apple-system, "Segoe UI", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(this.call ? 'UNKNOWN NUMBER' : 'ELLIS M', px + 14, py + 27);
+    ctx.fillText(this.call ? this.call.label : 'ELLIS M', px + 14, py + 27);
     for (let i = 0; i < 4; i++) {
       const bh = 3 + i * 3;
       ctx.fillStyle = i < this.signal ? '#cfd8e8' : 'rgba(207,216,232,0.22)';
@@ -162,6 +177,14 @@ export class Phone {
         ctx.font = '600 11px -apple-system, "Segoe UI", sans-serif';
         ctx.fillStyle = `rgba(143,208,160,${0.5 + 0.5 * pulse})`;
         ctx.fillText('E — ANSWER', px + pw / 2, py + 250);
+      } else if (this.call.phase === 'dialing') {
+        const pulse = 0.5 + 0.5 * Math.sin(g.time * 4);
+        ctx.font = '14px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = `rgba(213,220,232,${0.4 + 0.4 * pulse})`;
+        ctx.fillText('calling…', px + pw / 2, py + 190);
+        const dots = 1 + (Math.floor(g.time * 1.2) % 3);
+        ctx.fillStyle = 'rgba(139,147,165,0.5)';
+        ctx.fillText('· '.repeat(dots).trim(), px + pw / 2, py + 230);
       } else {
         const s = Math.floor(this.call.t);
         ctx.font = '15px -apple-system, "Segoe UI", sans-serif';
@@ -225,6 +248,12 @@ export class Phone {
       ctx.font = '600 10px -apple-system, "Segoe UI", sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText('E — SEND', px + pw - 18, py + ph - 25);
+    } else if (this.dial) {
+      const pulse = 0.6 + 0.4 * Math.sin(g.time * 5);
+      ctx.fillStyle = `rgba(224,120,120,${pulse})`;
+      ctx.font = '600 11px -apple-system, "Segoe UI", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`E — ${this.dial.label}`, px + pw / 2, py + ph - 25);
     } else {
       ctx.fillStyle = 'rgba(107,115,134,0.4)';
       ctx.font = '11px -apple-system, "Segoe UI", sans-serif';

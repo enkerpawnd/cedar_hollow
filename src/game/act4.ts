@@ -602,10 +602,14 @@ function* endingB(g: Game): Co {
   g.fadeToBlack(1, 2.2);
   g.ambienceOff();
   yield 3.0;
+  g.introLines.push('Dispatch logged a broken 911 call at 11:52. Enough of it got through.');
+  yield 4.2;
   g.introLines.push('They walked every room with me. The duffel was gone.');
   yield 4.0;
   g.introLines.push('The crawlspace was empty. The sleeping bag was still warm.');
   yield 4.4;
+  g.introLines.push('Nobody named Ellis ever called them. Nobody named Ellis called anyone.');
+  yield 4.6;
   g.introLines.push('Cedar Hollow — relisted. Off-season rate.');
   yield 5.0;
   g.introLines = [];
@@ -660,9 +664,51 @@ function* ellisPings(g: Game, barricaded: boolean): Co {
   }
 }
 
-// The barricade branch: 4+ minutes of him keeping the house while you
-// keep away from him. Scripted escalations on a schedule.
+// Sam's own 911 call: one bar, half a sentence, and a voice through the
+// floorboards that somebody downstairs was never supposed to hear.
+function* call911Co(g: Game): Co {
+  if (g.flag('called_911') || over(g)) return;
+  g.hint('');
+  g.phone.forceSignal(1, 14);
+  g.phone.startDial('911');
+  yield 3.4;
+  if (over(g)) {
+    g.phone.endCall(g);
+    return;
+  }
+  g.phone.call!.phase = 'active';
+  g.phone.call!.t = 0;
+  g.sound.play('switch', { vol: 0.3 });
+  yield 1.2;
+  g.say('—Cedar Hollow. The old Ellis place, off route six. Please—');
+  yield 4.4;
+  g.phone.forceSignal(0, 10);
+  g.sound.play('pop', { vol: 0.35 });
+  g.phone.endCall(g);
+  g.setFlag('called_911');
+  yield 1.4;
+  g.say('Dead. How much of that got through?');
+  yield 3.0;
+  // a voice, out loud, in a house he thought had gone quiet
+  tenantNoise(g, g.room.id, g.player.x, true);
+  yield 5.2;
+  if (over(g)) return;
+  g.phone.receive('who were you talking to', g);
+  yield 3.8;
+  g.say('…How does he know I was talking to someone?');
+  yield 3.4;
+  g.say('Why would Ellis ask me that.');
+  yield 3.0;
+  if (!over(g)) g.hint('hold out — and don’t answer him');
+}
+
+// The barricade branch. His texts promise the sheriff; the promise
+// collapses; the only rescue is the one Sam calls in herself.
 function* sheriffTimer(g: Game): Co {
+  const bail = (): boolean => g.flag('has_keys') || g.flag('crawl_entered') || over(g);
+  const cleanup = (): void => {
+    g.phone.dial = null;
+  };
   let t = 0;
   const fired = new Set<number>();
   const at = (mark: number, fn: () => void): void => {
@@ -671,10 +717,12 @@ function* sheriffTimer(g: Game): Co {
       fn();
     }
   };
-  while (t < 255) {
+
+  // phase one: the promise. help is always exactly twenty minutes away.
+  while (t < 100) {
     yield 0.5;
     t += 0.5;
-    if (g.flag('has_keys') || g.flag('crawl_entered') || over(g)) return;
+    if (bail()) return cleanup();
     at(24, () => g.sound.play('drag', { vol: 0.2, pan: 0.5 }));
     at(48, () => {
       g.phone.receive('20 min out. are you hidden?', g);
@@ -692,7 +740,7 @@ function* sheriffTimer(g: Game): Co {
         };
       }
     });
-    at(110, () => {
+    at(82, () => {
       g.run(function* (): Co {
         if (over(g)) return;
         tenant.mode = 'investigate';
@@ -703,17 +751,57 @@ function* sheriffTimer(g: Game): Co {
         tenant.hyperT = 16;
       }());
     });
-    at(172, () => g.phone.receive('passed the mile marker. lights off. stay put', g));
-    at(215, () => {
+  }
+
+  // phase two: the collapse. the sheriff was never coming, because the
+  // man who "called" him is standing on the other side of the wall.
+  while (t < 128) {
+    yield 0.5;
+    t += 0.5;
+    if (bail()) return cleanup();
+    at(101, () => g.phone.receive('sam. sheriff radioed. theres a wreck on the rt 9 bridge, hes stuck behind it', g));
+    at(109, () => g.phone.receive('could be an hour. maybe more. im sorry. stay hidden', g));
+    at(115, () => g.say('An hour.'));
+    at(119, () => g.say('He said forty minutes. Forty minutes ago.'));
+    at(124, () => {
+      g.say('Nobody is coming unless I make them come.');
+      g.phone.draft = null; // that reply's moment has passed
+      g.phone.dial = { label: 'CALL 911', onDial: () => g.run(call911Co(g)) };
+      g.hint('call 911 yourself — TAB');
+    });
+  }
+
+  // the wait is now Sam's choice to make real
+  while (!g.flag('called_911')) {
+    yield 0.5;
+    if (bail()) return cleanup();
+  }
+
+  // phase three: he knows you called. hold the line.
+  let t2 = 0;
+  const fired2 = new Set<number>();
+  const at2 = (mark: number, fn: () => void): void => {
+    if (t2 >= mark && !fired2.has(mark)) {
+      fired2.add(mark);
+      fn();
+    }
+  };
+  while (t2 < 100) {
+    yield 0.5;
+    t2 += 0.5;
+    if (bail()) return cleanup();
+    at2(35, () => {
       g.run(function* (): Co {
         if (over(g)) return;
+        const r = LINKS[g.room.id] ? g.room.id : 'bedroom';
         tenant.mode = 'investigate';
-        tenant.speed = 62;
-        planTo('backroom', 330);
-        yield 4.0;
-        if (!over(g)) g.say('He’s waiting by the hatch. Like he knows how this ends.');
+        tenant.speed = 74;
+        planTo(r, Math.max(140, Math.min(g.player.x, 760)));
+        yield 2.2;
+        if (!over(g)) tenant.hyperT = 14;
       }());
     });
+    at2(70, () => g.say('And Ellis has gone quiet. That’s worse. That’s so much worse.'));
   }
   if (!over(g)) yield* endingB(g);
 }

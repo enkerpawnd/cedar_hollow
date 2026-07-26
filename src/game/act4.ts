@@ -158,6 +158,12 @@ export function tenantTick(g: Game, dt: number): void {
 
   if (!tenant.active || !tenant.room) return;
 
+  // the vent kick + squeeze-out is a fixed 2.2s sequence the player can't
+  // influence. reaching the vent is the win, so he takes nobody while it
+  // plays — covers the two kicks, the pop, and the fade. once Sam is out
+  // in the yard the exterior pursuit re-arms its own catch.
+  if (g.flag('vent_kicking') && g.room.id === 'crawl') return;
+
   if (tenant.hyperT > 0) {
     tenant.hyperT -= dt;
     if (tenant.mode === 'patrol' && tenant.room === g.room.id && g.player.walking && !g.player.hidden) {
@@ -468,6 +474,12 @@ export function* crawlKeysCo(g: Game): Co {
 export function* ventKickCo(g: Game): Co {
   if (g.flag('vent_open') || g.flag('vent_kicking') || over(g)) return;
   g.setFlag('vent_kicking');
+  // reaching the vent IS the win: the kick is a 1.5s animation the player
+  // can't influence, so freeze his approach the instant it starts rather
+  // than letting him close during it. He hangs a body-length back, watching.
+  tenant.mode = 'scripted';
+  tenant.tx = tenant.x;
+  tenant.route = [];
   g.sound.play('thump', { vol: 0.5 });
   yield 0.8;
   if (over(g)) return;
@@ -661,7 +673,8 @@ function* endingC(g: Game): Co {
   yield 2.6;
   g.droppedLight = null;
   g.endWindowLit = false; // the lit window is dark now
-  g.endText = '';
+  // labeled, so the dark card reads as an ending and not a crash to menu
+  g.endText = 'ending — caught';
   g.state = 'end';
 }
 

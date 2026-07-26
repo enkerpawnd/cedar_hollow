@@ -22,45 +22,67 @@ have it) · `TAB` phone · `SHIFT` run (final act only).
 
 ## Current state: the full game, Acts One through Four
 
-**Act One** — the cold-open texts from Ellis, arrival at dusk, the
-already-open lockbox, the warm coffee mug, chimney smoke that shouldn't be
-there, the back-room bulb dying (get the flashlight from the kitchen drawer),
-dropping the bag, the "wasn't me" text exchange, and the sleep cut with a
-floorboard creak from a room Sam isn't in.
+A full run is in the 60–90 minute range: the cabin sits on real grounds
+now (a woodshed, a lakefront, and the crawlspace itself), every act is
+gated on things you do rather than things you watch, and the final act
+is a persistent stealth game.
 
-**Act Two** — grey morning, and the house is wrong. Four clues to find at
-your own pace: the guestbook ("don't use the back room"), the warm mattress
-in the back room, the duffel behind the pantry boxes with your booking dates
-highlighted, and the second toothbrush. The duffel triggers the midpoint
-text ("why, is someone there?"), Sam decides to leave a day early, and the
-car keys are gone from the hook. Small continuity details reward a second
-look: the rinsed mug, the dead stove, the hook that had keys on it the
-night before.
+**Act One — the settling-in night.** The cold-open texts, arrival at dusk,
+the already-open lockbox, the warm mug, chimney smoke that shouldn't be
+there. Settling in takes a real evening: drop the bag, bring in firewood
+from the pile out front (the shed beside it has a shiny new padlock), the
+back-room bulb dies (flashlight's in the kitchen drawer), and two text
+exchanges with Ellis — including his first cover story, after a pause long
+enough to feel like someone choosing words: "old embers mustve caught."
+Sleep false-starts on a porch thump; the raccoon text lands right after
+you've checked. Then the cut, and a floorboard creak from a room Sam
+isn't in.
 
-**Act Three** — nightfall, and the house answers back. The chair is pulled
-out, the pantry door stands open — always while you were in another room.
-Then the call: unknown number, breathing, cut. Ellis finally tells the truth
-by text ("he lives out there. between bookings.") and the player chooses:
-barricade the front door with the sofa, or go back into the pantry for the
-keys. Either way the power dies, the crawlspace hatch is open, and something
-drags itself across the wood below. The choice (and whether you know where
-the keys are) carries into Act Four.
+**Act Two — the grey morning.** Seven clues across the whole property,
+found in any order with a live counter: the guestbook ("don't use the back
+room"), the warm mattress, the wet second toothbrush, the duffel with your
+booking dates highlighted, the shed's tally marks (knee height, groups of
+five — the padlock is gone now), the lakefront camp whose chair faces the
+cabin instead of the water, and the standing boot prints under the window.
+At three clues Ellis texts first — "hows the stay going?" — and Sam notices
+she never texted him. The midpoint needs the duffel plus five: the send
+hangs at zero bars, "why, is someone there?", the cleaner's-husband story,
+and "you booked through sunday right?" Then pack — bag, charger,
+toothbrush — and find the hook empty.
 
-**Act Four** — the night. The Tenant moves through the cabin; his footsteps
-are the warning system. Kill the flashlight when he's near (light on him for
-more than a beat = caught), don't run close to him, don't touch him. The
-closet set-piece: his hand rests flat on the slats and you hold still — any
-input at all, for eight real seconds, is a hard end. Then the keys from his
-duffel, the front door (shove the sofa back first if you barricaded — it's
-loud, and he hears it), and the car.
+**Act Three — nightfall.** The key search is playable: five spots (sofa
+cushions, junk drawer, under the bed, the nightstand, the car outside in
+the true dark), while the house answers back behind you — the pulled-out
+chair, the open pantry door, the emptied toothbrush cup, and the guestbook
+open to a new line: today's date and "sam", no capital. Then the breathing
+call, and the whole history by text: the father's arrangement, the changed
+locks, the bedding the cleaner found under the house in March. Choose:
+barricade the door, or go back for the keys. Either way the power dies and
+the hatch is open.
+
+**Act Four — the night.** The Tenant is in the house from the first frame
+and never leaves. He patrols room to room; footsteps pan and fade with
+distance, he breathes when he shares your room, and doorways creak when he
+crosses them. He hears running through walls — and the click of your phone.
+Hiding only works if he didn't watch you do it. The duffel is gone from the
+pantry ("He knows I found it"), so the night runs through the one place
+Ellis said never to go: down the hatch, past his nest and his wall of
+booking printouts with notes in the margins, to the keys — and the loudest
+zipper in the world. Hold still while his legs hang through the hatch, then
+he drops in after you, and the crawl-chase runs for the loose vent panel,
+out under the porch, and across the yard to the car. The barricade branch
+instead is four-plus minutes of cat-and-mouse on a schedule — status texts
+from the road (answering one is a noise), a listening freeze, him waiting
+by the hatch — until the red-and-blues, unless you go for the keys anyway.
 
 **Endings.** *Drive:* the engine stalls once, catches twice; the headlights
-find him standing in the doorway, watching; two miles later the last two
-texts load. *Wait* (barricade branch only): hold out until the red-and-blue
-lights and the knock — the duffel is gone and the crawlspace is empty.
-*Caught:* the flashlight drops and rolls, the beam settles on the far wall,
-a shadow grows across it, and the title card comes back with the lit window
-dark. Being caught restarts the night, not the weekend.
+find him standing still — in the doorway, or mid-yard where he stopped
+chasing the moment the engine caught. Two miles later the last two texts
+load. *Wait* (barricade branch): hold out for the knock — the crawlspace
+is empty and the sleeping bag is still warm. *Caught:* the flashlight
+drops and rolls, a shadow grows across the beam, and the title card comes
+back with the lit window dark. Being caught restarts the night, not the
+weekend.
 
 **Saving.** The game autosaves a checkpoint at the start of each act
 (branch-aware in Act Four) to the browser's localStorage — no server or
@@ -83,21 +105,21 @@ pack to replace the placeholders one by one — no code changes needed.
 ## Code map
 
 - `src/engine/` — screen scaling, input, audio manager (+ synth fallbacks)
-- `src/game/world.ts` — silhouette scenery for each room
+- `src/game/world.ts` — silhouette scenery: cabin rooms plus the exterior,
+  woodshed, lakefront, and crawlspace
 - `src/game/lighting.ts` — darkness layer, lamp pools, flashlight cone
-- `src/game/act1.ts` — rooms, interactables, and the Act One script as a
-  coroutine (this is where the screenplay lives)
+- `src/game/act1.ts` … `act4.ts` — the screenplay as coroutines; `act4.ts`
+  also holds the Tenant's patrol/hearing/investigation AI
+- `src/game/rooms.ts` — every interactable, act-aware
 - `src/game/game.ts` — orchestration, coroutine runner, UI drawing
 - `src/game/phone.ts`, `narration.ts`, `player.ts`
 
 ## Roadmap
 
-The script is fully playable. What's left is polish:
+The script is fully playable at target length. What's left is polish:
 
 - Replace the synth placeholder audio with the real sound pack (see
   `docs/AUDIO.md` — `creak` and `drag` matter most).
-- Playtesting passes on walk speed, darkness levels, Tenant timings, and the
-  interception difficulty.
-- Save points / act select on the title screen (the `?act=` URLs already
-  exist as the mechanism).
+- Playtesting passes on the Act Four patrol: pantry dead-end pressure,
+  hearing radii, chase speeds, and darkness levels.
 - Optional: film grain, a pause menu, gamepad support, itch.io publishing.

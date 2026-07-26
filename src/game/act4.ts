@@ -25,6 +25,7 @@ const tenant = {
   hyperT: 0, // window where even walking nearby is heard
   burn: false, // he watched the player hide
   breathT: 3,
+  graceT: 0, // crawlchase: seconds he's still finding his bearings before he closes
   active: false,
 };
 
@@ -170,6 +171,17 @@ export function tenantTick(g: Game, dt: number): void {
   }
 
   if (tenant.mode === 'crawlchase') {
+    // he drops in and takes a beat to find you in the dark before he closes —
+    // the freeze-to-run handoff needs this air or the catch feels stolen
+    if (tenant.graceT > 0) {
+      tenant.graceT -= dt;
+      tenant.stepT -= dt;
+      if (tenant.stepT <= 0) {
+        tenant.stepT = 0.85;
+        if (g.room.id === 'crawl') g.sound.play('drag', { vol: 0.26, rate: 1.05, pan: 0.6 });
+      }
+      return;
+    }
     tenant.tx = g.player.x;
     const d = tenant.tx - tenant.x;
     tenant.x += Math.sign(d) * tenant.speed * dt;
@@ -445,7 +457,8 @@ export function* crawlKeysCo(g: Game): Co {
   tenant.x = 1015;
   tenant.tx = 1015;
   tenant.mode = 'crawlchase';
-  tenant.speed = 66;
+  tenant.speed = 52; // just under the player's crawl (57.75): keep moving and you pull away
+  tenant.graceT = 1.2; // a beat to orient before he starts homing
   g.sound.play('drag', { vol: 0.5, pan: 0.6 });
   g.say('No no no— the vent. The VENT.');
   g.hint('the vent — far end — GO');

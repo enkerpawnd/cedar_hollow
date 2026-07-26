@@ -242,7 +242,9 @@ export function buildRooms(): Record<string, Room> {
             else g.remark('Not on foot. Not into those trees. Keys first.');
           } else if (g.flag('choice_open') || g.flag('chose_barricade') || g.flag('chose_search')) {
             g.remark(g.flag('barricaded') ? 'The sofa stays where it is.' : 'Not out there. Not now.');
-          } else if (g.flag('leave_early') && g.flag('keys_gone')) {
+          } else if (g.flag('leave_early') && !g.flag('act3')) {
+            // act two only: once Sam decides to go, it's keys-then-car.
+            // act three needs the door open — the car is a search spot.
             g.remark('Keys first.');
           } else {
             g.gotoRoom('exterior', 1108, -1);

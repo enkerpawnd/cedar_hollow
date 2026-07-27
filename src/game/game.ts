@@ -141,7 +141,7 @@ export class Game {
     const act3Msgs: Msg[] = [
       { from: 'sam', text: 'someone just called and breathed into the phone. what is going on out there', status: 'delivered' },
       { from: 'ellis', text: 'ok. i need you to stay calm' },
-      { from: 'ellis', text: 'my dad used to let a man winter at the cabin. a handyman. an arrangement' },
+      { from: 'ellis', text: 'my dad used to let a man called Raymond stay at the cabin. a handyman. an arrangement' },
       { from: 'ellis', text: 'i ended it when i took over. changed the locks. he kept coming back' },
       { from: 'ellis', text: 'he doesnt break in. he waits for the bookings to end. the cleaner found bedding under the house in march' },
       { from: 'sam', text: 'UNDER THE HOUSE??', status: 'delivered' },

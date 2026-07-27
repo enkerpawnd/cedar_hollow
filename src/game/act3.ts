@@ -54,7 +54,7 @@ export function* barricadeCo(g: Game): Co {
   yield 2.2;
   g.sound.play('drag', { vol: 0.55, pan: 0.55 });
   yield 2.8;
-  g.say('Under the floor. That’s under the floor.');
+  g.say('Under the floor. That sound is coming from under the floor.');
   yield 4.0;
   g.sound.play('drag', { vol: 0.4, pan: 0.25 });
   yield 3.2;
@@ -103,7 +103,7 @@ export function* hatchReveal(g: Game): Co {
   yield 1.8;
   g.say('The hatch.');
   yield 2.6;
-  g.say('I walked past that thing twice.');
+  g.say('That padlock was on it this morning. I know it was.');
   yield 3.2;
   g.sound.play('drag', { vol: 0.6, pan: -0.2 });
   yield 2.8;
@@ -221,7 +221,7 @@ export function* actThree(g: Game): Co {
         yield 6.0;
         g.phone.receive('ok. i need you to stay calm', g);
         yield 4.2;
-        g.phone.receive('my dad used to let a man winter at the cabin. a handyman. an arrangement', g);
+        g.phone.receive('my dad used to let a man called Raymond stay at the cabin. a handyman. an arrangement', g);
         yield 5.2;
         g.phone.receive('i ended it when i took over. changed the locks. he kept coming back', g);
         yield 5.2;
@@ -253,7 +253,7 @@ export function* actThree(g: Game): Co {
   };
   yield waitFlag(g, 'ellis3_done');
   yield 2.2;
-  g.hint('barricade the door — or go back for those keys');
+  g.hint('shove the sofa against the front door — or go back for the keys');
   g.setFlag('choice_open');
 
   // the branch coroutines fade to black and raise act3_done

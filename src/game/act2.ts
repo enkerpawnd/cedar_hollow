@@ -132,7 +132,7 @@ export function* actTwo(g: Game): Co {
   yield 3.6;
   g.say('Why does that feel like a question about the house’s schedule and not mine?');
   yield 4.2;
-  g.say('Okay. New plan. Packed in ten minutes — it’s not leaving early, it’s beating traffic.');
+  g.say('Okay. New plan. Packed in ten minutes — I’m not leaving early, I’m beating traffic.');
   g.setFlag('leave_early');
   yield 2.4;
   g.hint('pack — bag, charger, toothbrush');

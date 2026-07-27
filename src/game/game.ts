@@ -326,14 +326,15 @@ export class Game {
     if (!this.cutscene) {
       if (pressed('tab', 'p') && !this.phone.call) {
         this.phone.toggle(this);
-        // in the final act, the click of the phone is a noise like any other
-        if (this.flag('act4')) tenantNoise(this, this.room.id, this.player.x);
+        // in the final act, the click of the phone is a noise like any other —
+        // and doing it on top of him is the last mistake Sam makes
+        if (this.flag('act4')) tenantNoise(this, this.room.id, this.player.x, false, true);
       }
       if (this.phone.open) {
         if (this.phone.call?.phase === 'ringing' && pressed('e', 'enter')) this.phone.answer(this);
         else if (pressed('e', 'enter') && this.phone.draft && !this.phone.call) {
           this.phone.send(this);
-          if (this.flag('act4')) tenantNoise(this, this.room.id, this.player.x);
+          if (this.flag('act4')) tenantNoise(this, this.room.id, this.player.x, false, true);
         } else if (pressed('e', 'enter') && this.phone.dial && !this.phone.call) {
           const d = this.phone.dial;
           this.phone.dial = null;

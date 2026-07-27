@@ -75,10 +75,20 @@ function planTo(room: string, x: number): void {
 }
 
 // A noise reaches him: same room always, adjacent rooms through the walls,
-// anywhere if it's loud. He comes to look.
-export function tenantNoise(g: Game, room: string, x: number, loud = false): void {
+// anywhere if it's loud. He comes to look. If `close`, a deliberate noise
+// (the click of the phone, the tap of a text) made right on top of him gives
+// Sam away outright — hiding or not, he doesn't have to come find her.
+export function tenantNoise(g: Game, room: string, x: number, loud = false, close = false): void {
   if (!tenant.active || !tenant.room || over(g)) return;
   if (tenant.mode === 'scripted' || tenant.mode === 'crawlchase') return;
+  if (close && tenant.room === room) {
+    const th = g.player.hidden ? 210 : 150;
+    if (Math.abs(tenant.x - x) < th) {
+      g.sound.play('creak', { vol: 0.4 });
+      catchPlayer(g);
+      return;
+    }
+  }
   const same = tenant.room === room;
   const adjacent = !!LINKS[tenant.room]?.[room] || !!LINKS[room]?.[tenant.room];
   if (!same && !adjacent && !loud) return;
@@ -755,8 +765,9 @@ function* sheriffTimer(g: Game): Co {
         g.phone.draft = {
           text: 'inside. hurry.',
           onSent: (m) => {
-            // the tap of a send is a noise like any other
-            tenantNoise(g, g.room.id, g.player.x);
+            // the tap of a send is a noise like any other — and a giveaway if
+            // he's already breathing down the wall next to you
+            tenantNoise(g, g.room.id, g.player.x, false, true);
             g.run(function* (): Co {
               yield 2.5;
               m.status = 'delivered';

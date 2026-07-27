@@ -1,4 +1,4 @@
-import { waitFlag } from './script';
+import { waitFlag, waitTap } from './script';
 import { actTwo } from './act2';
 import type { Game } from './game';
 import type { Co } from './types';
@@ -144,9 +144,15 @@ export function* falseStartCo(g: Game): Co {
   g.hint('');
   g.fadeToBlack(0.85, 2.4);
   yield 3.0;
-  g.sound.play('thump', { vol: 0.5, pan: -0.4 });
-  yield 1.6;
+  // the porch: a sharp thump out of the dark that jolts Sam awake
+  g.sound.play('thump', { vol: 0.62, pan: -0.45 });
+  yield 0.5;
+  g.sound.play('thump', { vol: 0.42, pan: -0.35 });
+  yield 1.1;
   g.fadeToBlack(0, 0.7);
+  // the wake itself: a sharp inhale and a slamming heart
+  g.sound.play('breath', { vol: 0.55, rate: 1.6 });
+  g.sound.play('thump', { vol: 0.3 });
   yield 0.9;
   g.cutscene = false;
   g.say('The porch. That was the porch.');

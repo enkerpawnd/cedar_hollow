@@ -1,6 +1,6 @@
 import { W, H } from '../engine/screen';
 import type { Game } from './game';
-import type { Ctx2D } from './types';
+import type { Co, Ctx2D } from './types';
 
 export interface Msg {
   from: 'sam' | 'ellis';
@@ -36,9 +36,19 @@ export class Phone {
   call: { phase: 'ringing' | 'dialing' | 'active'; t: number; label: string } | null = null;
   private sigT = 0;
   private ringT = 0;
+  private hadSendPrompt = false; // tracks the "you can send" cue edge
 
   update(dt: number, g: Game): void {
     this.slide += ((this.open ? 1 : 0) - this.slide) * Math.min(1, dt * 10);
+
+    // a distinct chirp the moment a message becomes available to send or dial —
+    // so the option to reach out is announced, not just the arrival of a text.
+    // deliberately the outgoing 'text' tone, so it can't be mistaken for the
+    // incoming buzz of a received message.
+    const sendPrompt = (!!this.draft || !!this.dial) && !this.call;
+    if (sendPrompt && !this.hadSendPrompt) g.sound.play('text', { vol: 0.5, rate: 1.15 });
+    this.hadSendPrompt = sendPrompt;
+
     this.sigT -= dt;
     if (this.sigT <= 0) {
       this.sigT = 2.5 + Math.random() * 3;
@@ -113,7 +123,13 @@ export class Phone {
 
   receive(text: string, g: Game): void {
     this.msgs.push({ from: 'ellis', text });
-    g.sound.play('buzz', { vol: 0.5 });
+    // a proper notification: louder, and a second buzz so a new message can't
+    // slip past unnoticed
+    g.sound.play('buzz', { vol: 0.78 });
+    g.run(function* (): Co {
+      yield 0.17;
+      g.sound.play('buzz', { vol: 0.6 });
+    }());
     if (!this.open) this.unread++;
   }
 

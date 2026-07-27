@@ -104,6 +104,11 @@ export function tenantAt(room: string): boolean {
   return tenant.room === room;
 }
 
+// A read-only peek at where he is, for the lighting layer's reveal pool.
+export function tenantView(): { room: string | null; x: number; active: boolean } {
+  return { room: tenant.room, x: tenant.x, active: tenant.active };
+}
+
 // Called when the player ducks into the closet: if he's in the bedroom and
 // close enough — or lit up by the flashlight — the hiding spot is burned.
 export function tenantSawHide(g: Game): void {

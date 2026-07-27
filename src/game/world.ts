@@ -359,6 +359,16 @@ export function drawExterior(ctx: Ctx2D, g: Game): void {
   if (g.flag('tenant_yard')) {
     // he stopped chasing the moment the engine caught. mid-yard, headlit,
     // just watching the car leave.
+    // a soft halo the headlights throw around him — drawn first, so the
+    // silhouette stays a crisp dark shape on top and there's no hard bar of
+    // light standing next to him.
+    const halo = ctx.createRadialGradient(690, 402, 6, 690, 402, 74);
+    halo.addColorStop(0, 'rgba(235,230,210,0.16)');
+    halo.addColorStop(1, 'rgba(235,230,210,0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.ellipse(690, 402, 58, 92, 0, 0, Math.PI * 2);
+    ctx.fill();
     ctx.fillStyle = '#040508';
     ctx.beginPath();
     ctx.roundRect(679, 363, 22, 64, 8);

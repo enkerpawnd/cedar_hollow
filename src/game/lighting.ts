@@ -1,5 +1,6 @@
 import { W, H } from '../engine/screen';
 import { FLOOR_Y } from './world';
+import { tenantView } from './act4';
 import type { Game } from './game';
 import type { Ctx2D } from './types';
 
@@ -54,10 +55,22 @@ export function renderLighting(g: Game, cam: number): Glow[] {
     if (L.warm) glows.push({ x, y: L.y, r: r * 0.9, color: '255,166,74', a: 0.1 });
   }
 
-  // eyes adjust: a faint pool around Sam so darkness is dread, not blindness
+  // eyes adjust: a soft pool around Sam so darkness is dread, not blindness —
+  // and so the protagonist herself is never lost in it. It falls off gently,
+  // reading as adjusted night vision, not a follow-spot. Dimmer and tighter
+  // while she's folded into a hiding spot.
   const px = g.player.x - cam;
   const py = FLOOR_Y - 45;
-  cutRadial(lctx, px, py, 80, 0.3);
+  if (g.player.hidden) cutRadial(lctx, px, py, 44, 0.18);
+  else cutRadial(lctx, px, py, 90, 0.4);
+
+  // the Tenant, when he shares the room: a faint reveal so the threat is a
+  // shape you can read and route around, not an invisible catch.
+  const tv = tenantView();
+  if (g.flag('act4') && tv.active && tv.room === g.room.id) {
+    const ty = FLOOR_Y - (g.room.id === 'crawl' ? 38 : 52);
+    cutRadial(lctx, tv.x - cam, ty, g.room.id === 'crawl' ? 60 : 78, 0.22);
+  }
 
   if (g.droppedLight) {
     // the flashlight on the floor, beam settling against the far wall

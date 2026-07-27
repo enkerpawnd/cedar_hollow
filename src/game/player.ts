@@ -94,21 +94,32 @@ export class Player {
       return;
     }
 
-    // duffel bag until it's put down — and again once it's packed to leave
-    if (!g.flag('bag_dropped') || g.flag('packed_bag')) {
-      ctx.fillStyle = '#04050a';
+    const f = this.facing;
+
+    // Clarity comes from value separation, not outlines: her body is the
+    // darkest solid, and anything she's carrying sits a step lighter so it
+    // reads as a distinct object against her.
+    const body = '#04050a';
+
+    // the bag: a pack slung on her back, hugging the torso on the far side so
+    // it reads as worn rather than dangling from a single string
+    const carrying = !g.flag('bag_dropped') || g.flag('packed_bag');
+    if (carrying) {
+      const bx = x - f * 13;
+      const by = fy - 74 + bobY;
+      ctx.fillStyle = '#10151d';
       ctx.beginPath();
-      ctx.roundRect(x - this.facing * 22 - 8, fy - 58 + bobY, 18, 24, 5);
+      ctx.roundRect(bx - 9, by, 18, 34, 6);
       ctx.fill();
-      ctx.strokeStyle = '#04050a';
-      ctx.lineWidth = 3;
+      // a darker top flap, for a little form
+      ctx.fillStyle = '#0a0e15';
       ctx.beginPath();
-      ctx.moveTo(x - this.facing * 4, fy - 72 + bobY);
-      ctx.lineTo(x - this.facing * 18, fy - 56 + bobY);
-      ctx.stroke();
+      ctx.roundRect(bx - 9, by, 18, 10, 6);
+      ctx.fill();
     }
 
-    ctx.strokeStyle = '#04050a';
+    // legs
+    ctx.strokeStyle = body;
     ctx.lineWidth = 7;
     ctx.lineCap = 'round';
     ctx.beginPath();
@@ -118,20 +129,63 @@ export class Player {
     ctx.lineTo(x + 2 - stride, fy - 2);
     ctx.stroke();
 
-    ctx.fillStyle = '#04050a';
+    // torso + head
+    ctx.fillStyle = body;
     ctx.beginPath();
     ctx.roundRect(x - 9, fy - 78 + bobY, 18, 44, 8);
     ctx.fill();
-
     ctx.beginPath();
-    ctx.arc(x + this.facing * 2, fy - 86 + bobY, 8.5, 0, Math.PI * 2);
+    ctx.arc(x + f * 2, fy - 86 + bobY, 8.5, 0, Math.PI * 2);
     ctx.fill();
 
+    // pack straps over the chest, a hair lighter than the coat so they show
+    if (carrying) {
+      ctx.strokeStyle = '#0b0f17';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x + f * 6, fy - 76 + bobY);
+      ctx.lineTo(x + f * 3, fy - 46 + bobY);
+      ctx.moveTo(x - f * 2, fy - 75 + bobY);
+      ctx.lineTo(x - f * 4, fy - 46 + bobY);
+      ctx.stroke();
+    }
+
+    // an armload of firewood, cradled to the chest. The logs are a couple of
+    // steps lighter than her body, so the load is legible on its own.
+    if (g.flag('has_logs') && !g.flag('logs_dropped')) {
+      const lx = x + f * 12;
+      const ly = fy - 52 + bobY;
+      // forearms come up under the load
+      ctx.strokeStyle = body;
+      ctx.lineWidth = 6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(x - 6, fy - 58 + bobY);
+      ctx.lineTo(lx, ly + 6);
+      ctx.moveTo(x + 7, fy - 56 + bobY);
+      ctx.lineTo(lx, ly + 8);
+      ctx.stroke();
+      // three split logs, seen end-on
+      for (const [ox, oy] of [[0, -5], [-2, 4], [4, 1]] as const) {
+        ctx.fillStyle = '#171c24';
+        ctx.beginPath();
+        ctx.arc(lx + ox, ly + oy, 6.5, 0, Math.PI * 2);
+        ctx.fill();
+        // a darker core so each end reads as a cut log
+        ctx.fillStyle = '#0c1017';
+        ctx.beginPath();
+        ctx.arc(lx + ox, ly + oy, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
     if (this.flashOn && g.flag('has_flashlight')) {
+      ctx.strokeStyle = body;
       ctx.lineWidth = 6;
       ctx.beginPath();
-      ctx.moveTo(x + this.facing * 5, fy - 64 + bobY);
-      ctx.lineTo(x + this.facing * 18, fy - 68 + bobY);
+      ctx.moveTo(x + f * 5, fy - 64 + bobY);
+      ctx.lineTo(x + f * 18, fy - 68 + bobY);
       ctx.stroke();
     }
   }

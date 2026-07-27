@@ -8,19 +8,27 @@ export function* actOne(g: Game): Co {
   g.fade = 1;
   yield 1.0;
 
-  // cold open: the listing texts, on black
+  // cold open: the listing texts, on black — paged at the reader's pace so
+  // the premise never scrolls off before it's read
   const intro = [
     'ELLIS: code’s 4491. lockbox is on the door.',
-    'ELLIS: water heater knocks. ignore it, it’s the pipes.',
+    'ELLIS: water heater knocks at night. ignore it, place is old.',
     'ELLIS: i live just up the road if you need anything.',
-    'ELLIS: enjoy the quiet. nobody comes out here this time of year.',
+    'ELLIS: nobody comes out here this time of year. enjoy the quiet.',
   ];
+  g.takeAdvance(); // clear the click that started the game
+  // let all the texts arrive at a readable pace, building up on screen…
   for (const line of intro) {
     g.sound.play('text', { vol: 0.4 });
     g.introLines.push(line);
-    yield 2.1;
+    yield 2.0;
   }
-  yield 1.3;
+  // …then hold on the full exchange until the player is ready to move on
+  yield 0.6;
+  g.introAdvance = true;
+  yield waitTap(g);
+  g.introAdvance = false;
+  yield 0.4;
   g.introLines = [];
 
   g.setAmbience();

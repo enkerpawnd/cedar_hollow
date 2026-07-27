@@ -47,7 +47,13 @@ export class Game {
   cutscene = true;
   fade = 1;
   hintText = '';
+  // a persistent control prompt shown just below the objective line — used for
+  // the flashlight, so it can't be shoved off-screen by a story hint and stays
+  // put until the player actually presses F.
+  flashPrompt = '';
   introLines: string[] = [];
+  introAdvance = false; // show a "click to continue" prompt under the intro
+  private advanceTap = false; // a click landed this frame (consumed by waitTap)
   endText = 'end of act one — vertical slice';
   endWindowLit = true;
   onRoomEnter: ((id: string) => void) | null = null;
@@ -74,7 +80,11 @@ export class Game {
   }
 
   private onClick(): void {
-    if (this.state !== 'title') return;
+    if (this.state !== 'title') {
+      // during play, a click is an "advance" — used to page the opening text
+      this.advanceTap = true;
+      return;
+    }
     this.state = 'loading';
     void this.sound.init().then(() => {
       this.loops.wind = this.sound.loop('wind', 0);
@@ -188,6 +198,14 @@ export class Game {
 
   hint(t: string): void {
     this.hintText = t;
+  }
+
+  // Player-driven "continue": a click, Enter, or Space. Consumed on read so a
+  // single tap advances exactly one line of the opening.
+  takeAdvance(): boolean {
+    const tapped = this.advanceTap || pressed('enter', ' ');
+    this.advanceTap = false;
+    return tapped;
   }
 
   inputLocked(): boolean {
@@ -326,6 +344,7 @@ export class Game {
         if (pressed('f') && this.flag('has_flashlight')) {
           this.player.flashOn = !this.player.flashOn;
           this.sound.play('switch', { vol: 0.35 });
+          this.flashPrompt = ''; // the prompt has served its purpose
         }
         const it = this.nearestItem();
         if (it && pressed('e', 'enter')) it.use(this);
@@ -400,8 +419,15 @@ export class Game {
       ctx.fillStyle = 'rgba(190,200,220,0.38)';
       ctx.fillText(this.hintText.toUpperCase(), 20, 28);
     }
+    if (this.flashPrompt) {
+      // a second line under the objective, its own persistent slot
+      ctx.font = '600 11px -apple-system, "Segoe UI", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillStyle = 'rgba(240,214,150,0.5)';
+      ctx.fillText(this.flashPrompt.toUpperCase(), 20, 46);
+    }
 
-    this.narration.render(ctx);
+    this.narration.render(ctx, this);
     this.phone.render(ctx, this);
 
     if (this.fade > 0.001) {
@@ -414,6 +440,12 @@ export class Game {
       ctx.textAlign = 'center';
       ctx.fillStyle = 'rgba(160,178,200,0.9)';
       this.introLines.forEach((line, i) => ctx.fillText(line, W / 2, 232 + i * 38));
+      if (this.introAdvance) {
+        const pulse = 0.35 + 0.35 * Math.sin(this.time * 3);
+        ctx.font = '12px -apple-system, "Segoe UI", sans-serif';
+        ctx.fillStyle = `rgba(150,168,196,${pulse})`;
+        ctx.fillText('click or press space to continue', W / 2, 232 + this.introLines.length * 38 + 22);
+      }
     }
   }
 

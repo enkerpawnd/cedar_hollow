@@ -365,7 +365,9 @@ export function buildRooms(): Record<string, Room> {
           } else if (g.flag('bulb_popped') && !g.flag('has_flashlight')) {
             g.setFlag('has_flashlight');
             g.sound.play('pickup', { vol: 0.5 });
-            g.remark('Flashlight. Batteries work. Good.', 'F to switch it on.');
+            g.remark('Flashlight. Batteries work.', 'Press F to switch it on.');
+            // its own persistent slot below the objective; clears once F is pressed
+            g.flashPrompt = 'press F to turn on the flashlight';
           } else if (g.flag('has_flashlight')) {
             g.remark('Just the junk now.');
           } else {

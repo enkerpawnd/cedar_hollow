@@ -83,7 +83,7 @@ export function* searchCo(g: Game): Co {
   yield 2.6;
   g.cutscene = false;
   if (!g.player.flashOn) {
-    g.hint('F — flashlight');
+    g.flashPrompt = 'press F to turn on the flashlight';
     yield () => g.player.flashOn;
   }
   g.hint('get out of the pantry');

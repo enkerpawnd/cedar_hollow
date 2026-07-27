@@ -398,11 +398,10 @@ export function* enterCrawlCo(g: Game): Co {
     yield 3.6;
     g.say('This is the house he actually rents.');
     yield 3.0;
-    if (!g.player.flashOn) g.hint('F — flashlight');
-    else g.hint('his duffel — find my keys');
+    g.hint('his duffel — find my keys');
     if (!g.player.flashOn) {
+      g.flashPrompt = 'press F to turn on the flashlight';
       yield () => g.player.flashOn || over(g);
-      g.hint('his duffel — find my keys');
     }
   }
 }
@@ -505,7 +504,7 @@ export function* ventKickCo(g: Game): Co {
   yield 0.6;
   g.cutscene = false;
   g.say('Air. Gravel. CAR.');
-  g.hint('RUN — the car');
+  g.hint('hold SHIFT to run — get to the car');
   // he takes the vent too, seconds behind
   yield 2.6;
   if (over(g) || g.flag('ending')) return;

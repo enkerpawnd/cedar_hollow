@@ -211,18 +211,24 @@ export function buildRooms(): Record<string, Room> {
       { x: 476, y: 428, r: 110, warm: true, flicker: true, on: (g) => !g.flag('act2') },
       { x: 350, y: 200, r: 250, warm: true, on: (g) => g.flag('lights_main') && !g.flag('power_out') },
       { x: 840, y: 195, r: 230, warm: true, on: (g) => g.flag('lights_main') && !g.flag('power_out') },
-      { x: 230, y: 220, r: 90, strength: 0.35, on: (g) => !g.isDay() },
-      { x: 230, y: 230, r: 320, strength: 0.5, on: (g) => g.isDay() },
+      { x: 230, y: 300, r: 90, strength: 0.35, on: (g) => !g.isDay() },
+      { x: 230, y: 300, r: 320, strength: 0.5, on: (g) => g.isDay() },
     ],
     items: [
       {
-        id: 'hook', x: 34, y: 350, label: 'key hook',
+        id: 'hook', x: 18, y: 350, label: 'key hook',
         enabled: always,
         use(g) {
           if (g.flag('act3')) {
             g.remark('Still empty.');
           } else if (!g.flag('act2')) {
-            g.remark('My keys. Right where I can’t forget them.');
+            if (!g.flag('keys_hung')) {
+              g.setFlag('keys_hung');
+              g.sound.play('pickup', { vol: 0.4 });
+              g.remark('Keys on the hook. Right where I can’t forget them.');
+            } else {
+              g.remark('My keys. Right where I left them.');
+            }
           } else if (!g.flag('leave_early')) {
             g.remark('Hm. Thought I hung my keys there.');
           } else if (!(g.flag('packed_bag') && g.flag('packed_charger') && g.flag('packed_toothbrush'))) {
@@ -268,13 +274,6 @@ export function buildRooms(): Record<string, Room> {
         },
       },
       {
-        id: 'coat', x: 300, y: 355, label: 'your jacket',
-        enabled: always,
-        use(g) {
-          g.remark('My jacket, over the sofa arm. Making the place look lived-in.');
-        },
-      },
-      {
         id: 'switch_main', x: 140, y: 340, label: 'light switch',
         enabled: always,
         use(g) {
@@ -296,7 +295,7 @@ export function buildRooms(): Record<string, Room> {
             g.setFlag('srch_sofa');
             g.remark(
               'Cushions up. Coins, crumbs, a pen that isn’t mine.',
-              'And my jacket — every pocket, twice. Receipts and a lighter.',
+              'Down the sides — receipts, a dead lighter. Nothing that starts a car.',
             );
           } else {
             g.remark('The cushions have given all they have to give.');
@@ -389,8 +388,8 @@ export function buildRooms(): Record<string, Room> {
     draw: drawBedroom,
     lights: [
       { x: 610, y: 388, r: 210, warm: true, on: (g) => !g.flag('power_out') },
-      { x: 245, y: 220, r: 80, strength: 0.3, on: (g) => !g.isDay() },
-      { x: 245, y: 230, r: 280, strength: 0.5, on: (g) => g.isDay() },
+      { x: 245, y: 300, r: 80, strength: 0.3, on: (g) => !g.isDay() },
+      { x: 245, y: 300, r: 280, strength: 0.5, on: (g) => g.isDay() },
     ],
     items: [
       door('bedroom_out', 80, 'main room', 'main', 560),
@@ -550,14 +549,21 @@ export function buildRooms(): Record<string, Room> {
         (g) => g.flag('has_flashlight') && g.player.flashOn,
       ),
       {
-        id: 'hatch', x: 324, y: 445, label: 'crawlspace hatch',
-        enabled: (g) => g.flag('hatch_open'),
+        // known from the first night as a padlocked hatch, so when it opens in
+        // the dark the player already knows the floor has a door in it
+        id: 'hatch', x: 324, y: 445, label: 'floor hatch',
+        enabled: (g) => !g.flag('setpiece_active'),
         use(g) {
           if (g.flag('act4')) {
             if (g.flag('duffel_gone_seen') || g.flag('chose_barricade')) g.run(enterCrawlCo(g));
             else g.remark('Down there is last-resort territory. The duffel first.');
-          } else {
+          } else if (g.flag('hatch_open')) {
             g.remark('Ellis said do not go in the crawlspace.', 'For once, Ellis and I want the same thing.');
+          } else {
+            g.remark(
+              'A hatch in the floor, padlocked shut. Same shiny lock as the shed.',
+              'Sealed tight. Whatever’s down there is meant to stay down there.',
+            );
           }
         },
       },
@@ -571,8 +577,7 @@ export function buildRooms(): Record<string, Room> {
     ambientDay: 0.35,
     draw: drawBathroom,
     lights: [
-      { x: 302, y: 250, r: 170, warm: true, strength: 0.55, on: (g) => !g.flag('power_out') },
-      { x: 113, y: 170, r: 160, strength: 0.5, on: (g) => g.isDay() },
+      { x: 302, y: 300, r: 170, warm: true, strength: 0.55, on: (g) => !g.flag('power_out') },
     ],
     items: [
       door('bathroom_out', 80, 'bedroom', 'bedroom', 850, -1),
@@ -688,7 +693,7 @@ export function buildRooms(): Record<string, Room> {
         320,
       ),
       {
-        id: 'tallies', x: 250, y: 435, radius: 48, label: 'marks on the wall',
+        id: 'tallies', x: 200, y: 430, radius: 100, label: 'marks on the wall',
         enabled: always,
         use(g) {
           if (!g.flag('clue_shed')) {

@@ -45,7 +45,12 @@ export function* actOne(g: Game): Co {
   yield waitFlag(g, 'entered');
   yield 1.4;
   g.say('Smaller than the photos. Cleaner, too.');
-  g.hint('settle in — drop your bag in the bedroom');
+  yield 2.6;
+  g.hint('hang your car keys on the hook by the door');
+
+  yield waitFlag(g, 'keys_hung');
+  yield 1.2;
+  g.hint('settle in — drop your bag near the bed');
 
   yield waitFlag(g, 'bag_dropped');
   yield 1.6;

@@ -100,7 +100,7 @@ export class Game {
   // Rebuild the world state a checkpoint implies and start its act script.
   private startFrom(cp: Checkpoint | null): void {
     const act1Flags = [
-      'lockbox_seen', 'entered', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight',
+      'lockbox_seen', 'entered', 'keys_hung', 'lights_main', 'mug_seen', 'bulb_popped', 'has_flashlight',
       'bag_dropped', 'shed_seen', 'has_logs', 'logs_dropped', 'ellis_done', 'ellisB_done',
       'unpacked', 'sleep_try1', 'checked_thump',
     ];

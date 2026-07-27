@@ -368,9 +368,6 @@ export function drawExterior(ctx: Ctx2D, g: Game): void {
     ctx.fill();
     ctx.fillRect(682, 425, 7, 45);
     ctx.fillRect(691, 425, 7, 45);
-    // the rim the headlights carve out of him
-    ctx.fillStyle = 'rgba(235,230,210,0.12)';
-    ctx.fillRect(675, 350, 4, 118);
   }
 }
 
@@ -382,20 +379,47 @@ export function drawMain(ctx: Ctx2D, g: Game): void {
   const day = g.isDay();
   interiorShell(ctx, w, '#161b29');
 
-  windowPane(ctx, 190, 175, 80, 92, day ? '#8b9cb0' : '#0a0f1d');
-  pine(ctx, 214, 262, 40, '#070a12');
-  pine(ctx, 244, 262, 30, '#070a12');
+  // window at head height, not floating up near the ceiling
+  windowPane(ctx, 190, 246, 80, 104, day ? '#8b9cb0' : '#0a0f1d');
+  pine(ctx, 214, 344, 40, '#070a12');
+  pine(ctx, 244, 344, 30, '#070a12');
 
   doorFrame(ctx, 70);
   lightSwitch(ctx, 140);
 
-  // key hook: Sam's keys hang here from arrival — until they don't
-  ctx.fillStyle = '#1d2434';
-  ctx.fillRect(28, 350, 7, 7);
-  if (g.flag('entered') && !g.flag('act2')) {
-    ctx.fillStyle = '#8f9573';
-    ctx.fillRect(29, 357, 3, 9);
-    ctx.fillRect(33, 357, 3, 7);
+  // key rack: a small board mounted flat on the wall, clear of the front door.
+  // Sam's car keys hang here once she hooks them up on the first night.
+  ctx.fillStyle = '#0e1220';
+  ctx.beginPath();
+  ctx.roundRect(6, 338, 24, 34, 3);
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(150,162,190,0.28)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(6.5, 338.5, 23, 33);
+  // two little hooks screwed into the board
+  ctx.strokeStyle = '#3a4258';
+  ctx.lineWidth = 2;
+  for (const hk of [14, 22]) {
+    ctx.beginPath();
+    ctx.moveTo(hk, 350);
+    ctx.lineTo(hk, 356);
+    ctx.stroke();
+  }
+  if (g.flag('keys_hung') && !g.flag('act2')) {
+    // the keys: a ring and a couple of keys off the left hook
+    ctx.strokeStyle = 'rgba(210,214,150,0.75)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(14, 360, 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgba(200,205,225,0.6)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(13, 364);
+    ctx.lineTo(11, 372);
+    ctx.moveTo(16, 364);
+    ctx.lineTo(18, 371);
+    ctx.stroke();
   }
 
   // sofa — shoved against the front door if Sam barricaded
@@ -516,7 +540,7 @@ export function drawBedroom(ctx: Ctx2D, g: Game): void {
   interiorShell(ctx, w, '#151a28');
 
   doorFrame(ctx, 80, true);
-  windowPane(ctx, 210, 175, 70, 92, day ? '#8b9cb0' : '#0a0f1d');
+  windowPane(ctx, 210, 246, 70, 104, day ? '#8b9cb0' : '#0a0f1d');
   doorFrame(ctx, 850, true);
 
   // the closet: slatted door, floor to header
@@ -615,26 +639,51 @@ export function drawBackroom(ctx: Ctx2D, g: Game): void {
   ctx.fillStyle = '#1a2130';
   ctx.fillRect(578, 448, 7, 12);
 
-  // floor hatch: barely there, until it's open
+  // floor hatch: a low bulkhead standing ON the floor boards — a plain
+  // raised rectangle (front face + a lighter top), like a bump on the
+  // ground, not a plate laid flat into the texture. Padlocked from the
+  // first night; thrown open once the lock is off.
+  const hw = 54;
+  const hx = 325 - hw / 2; // centered on the hatch interactable at x=324
+  const topY = 461, frontY = 470, baseY = 486; // lid top, front-face start, floor contact
+  // contact shadow so the box reads as resting on the boards
+  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.beginPath();
+  ctx.ellipse(hx + hw / 2, baseY + 2, hw / 2 + 7, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
   if (g.flag('hatch_open')) {
-    ctx.fillStyle = '#020308';
-    ctx.fillRect(292, 494, 64, 32);
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(292, 494, 64, 32);
-    // the lid, thrown back against the floor
-    ctx.fillStyle = '#0b0e16';
+    // the black opening in the floor where the door was
+    rr(ctx, hx + 4, frontY, hw - 8, baseY - frontY, 2, '#020308');
+    // the lid, flipped up and leaning back past the opening
     ctx.save();
-    ctx.translate(278, 496);
-    ctx.rotate(-0.5);
-    ctx.fillRect(-58, 0, 62, 7);
+    ctx.translate(hx + 5, frontY + 2);
+    ctx.rotate(-0.34);
+    rr(ctx, 0, -32, hw - 8, 9, 2, '#212a3e');
     ctx.restore();
-  } else {
-    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    // the busted hasp hanging off the front edge
+    ctx.strokeStyle = 'rgba(150,162,190,0.4)';
     ctx.lineWidth = 2;
-    ctx.strokeRect(292, 494, 64, 32);
     ctx.beginPath();
-    ctx.arc(324, 510, 4, 0, Math.PI);
+    ctx.moveTo(hx + hw / 2 + 2, frontY + 7);
+    ctx.lineTo(hx + hw / 2 + 10, frontY + 2);
+    ctx.stroke();
+  } else {
+    // front face of the raised door — the side you'd walk up to
+    rr(ctx, hx, frontY, hw, baseY - frontY, 2, '#151b29');
+    // top face, a touch lighter: the bump catching the bulb overhead
+    rr(ctx, hx - 2, topY, hw + 4, frontY - topY + 3, 2, '#222b40');
+    // hasp + the same shiny padlock as the shed, on the front face
+    ctx.fillStyle = '#20283a';
+    ctx.fillRect(hx + hw / 2 - 6, frontY + 3, 12, 5);
+    ctx.fillStyle = '#39425a';
+    ctx.beginPath();
+    ctx.roundRect(hx + hw / 2 - 3.5, frontY + 7, 8, 8, 2);
+    ctx.fill();
+    ctx.strokeStyle = '#4a5470';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(hx + hw / 2 + 0.5, frontY + 7, 2.5, Math.PI, 0);
     ctx.stroke();
   }
 }
@@ -647,7 +696,6 @@ export function drawBathroom(ctx: Ctx2D, g: Game): void {
   interiorShell(ctx, w, '#141a27');
 
   doorFrame(ctx, 80, true);
-  windowPane(ctx, 96, 140, 34, 46, day ? '#8b9cb0' : '#0a0f1d');
 
   // towel
   ctx.fillStyle = '#0d1019';
@@ -657,20 +705,20 @@ export function drawBathroom(ctx: Ctx2D, g: Game): void {
   ctx.roundRect(158, 322, 30, 42, 3);
   ctx.fill();
 
-  // vanity light + mirror
+  // vanity light + mirror, dropped to sit just above the sink
   ctx.fillStyle = '#0d1019';
-  ctx.fillRect(260, 196, 84, 7);
+  ctx.fillRect(260, 244, 84, 7);
   ctx.fillStyle = 'rgba(255,217,160,0.55)';
-  ctx.fillRect(264, 199, 76, 3);
+  ctx.fillRect(264, 247, 76, 3);
   ctx.fillStyle = '#1c2434';
   ctx.beginPath();
-  ctx.roundRect(266, 210, 72, 92, 4);
+  ctx.roundRect(266, 258, 72, 92, 4);
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.05)';
   ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(280, 292);
-  ctx.lineTo(322, 222);
+  ctx.moveTo(280, 340);
+  ctx.lineTo(322, 270);
   ctx.stroke();
 
   // sink
@@ -864,20 +912,21 @@ export function drawShed(ctx: Ctx2D, g: Game): void {
   ctx.fillRect(330, 380, 26, 16);
   ctx.fillRect(368, 386, 40, 10);
 
-  // the tallies: groups of five, scratched low on the wall
-  ctx.strokeStyle = 'rgba(200,206,220,0.22)';
+  // the tallies: groups of five, scratched low on the clear stretch of wall
+  // between the door and the workbench — a tidy grid, nothing overlapping
+  ctx.strokeStyle = 'rgba(200,206,220,0.24)';
   ctx.lineWidth = 1.2;
   for (let gi = 0; gi < 14; gi++) {
-    const gx = 96 + (gi % 7) * 42;
-    const gy = 418 + Math.floor(gi / 7) * 24;
+    const gx = 128 + (gi % 4) * 42; // 128…254, clear of door (<114) and bench (>310)
+    const gy = 400 + Math.floor(gi / 4) * 17; // four tidy rows above the floor
     for (let i = 0; i < 4; i++) {
       ctx.beginPath();
       ctx.moveTo(gx + i * 5, gy);
-      ctx.lineTo(gx + i * 5 + srand(gi * 9 + i) * 2 - 1, gy + 13);
+      ctx.lineTo(gx + i * 5 + srand(gi * 9 + i) * 2 - 1, gy + 12);
       ctx.stroke();
     }
     ctx.beginPath();
-    ctx.moveTo(gx - 3, gy + 10);
+    ctx.moveTo(gx - 3, gy + 9);
     ctx.lineTo(gx + 18, gy + 3);
     ctx.stroke();
   }

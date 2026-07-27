@@ -9,7 +9,7 @@ import { buildRooms } from './rooms';
 import { actOne } from './act1';
 import { actTwo } from './act2';
 import { actThree } from './act3';
-import { actFour, tenantTick, tenantDraw, overlaysDraw, tenantNoise } from './act4';
+import { actFour, tenantTick, tenantDraw, tenantNoise } from './act4';
 import { loadCheckpoint, clearSave, CHECKPOINT_LABELS, type Checkpoint } from './save';
 import type { Co, Ctx2D, Interactable, Room } from './types';
 
@@ -410,7 +410,6 @@ export class Game {
     ctx.restore();
 
     ctx.drawImage(this.vignette, 0, 0);
-    overlaysDraw(ctx, this, cam);
 
     if (!this.cutscene && !this.phone.open && !this.flag('setpiece_active')) this.drawPrompt(ctx, cam);
 

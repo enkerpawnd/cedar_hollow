@@ -348,24 +348,6 @@ export function tenantDraw(ctx: Ctx2D, g: Game): void {
   ctx.fill();
 }
 
-// Ending C's shadow, growing across the dropped beam.
-export function overlaysDraw(ctx: Ctx2D, g: Game, cam: number): void {
-  if (!g.flag('shadow_grow') || !g.droppedLight) return;
-  const d = g.droppedLight;
-  const k = Math.min(1, Math.max(0, (g.time - d.at - 1.0) / 2.4));
-  if (k <= 0) return;
-  const bx = d.x - cam + d.dir * 240;
-  const h = 130 + k * 250;
-  const w = 46 + k * 110;
-  ctx.fillStyle = `rgba(1,2,6,${0.35 + 0.55 * k})`;
-  ctx.beginPath();
-  ctx.ellipse(bx, FLOOR_Y - h / 2, w / 2, h / 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(bx, FLOOR_Y - h - 12, w * 0.22, 0, Math.PI * 2);
-  ctx.fill();
-}
-
 // The pantry: the duffel is gone. He corrected the mistake of being found.
 export function* duffelGoneCo(g: Game): Co {
   if (g.flag('duffel_gone_seen')) return;
@@ -677,7 +659,6 @@ function* endingC(g: Game): Co {
   g.sound.play('thump', { vol: 0.5 });
   g.sound.play('creak', { vol: 0.4, pan: 0.3 });
   yield 1.2;
-  g.setFlag('shadow_grow');
   g.sound.play('drag', { vol: 0.7 });
   yield 2.8;
   g.sound.play('thump', { vol: 0.8 });
